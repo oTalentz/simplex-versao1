@@ -1,4 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // --- CONFIGURATION ---
+    const API_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:5000'
+        : '/api';
+
     // --- GENERIC MODAL LOGIC ---
 
     function setupModal(triggerId, modalId) {
@@ -382,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 // Use Transparent PIX Checkout
-                const endpoint = 'http://localhost:5000/create-pix-payment';
+                const endpoint = `${API_BASE_URL}/create-pix-payment`;
 
                 console.log(`Initiating PIX payment to ${endpoint}`);
 
