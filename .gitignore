@@ -15,3 +15,16 @@ Thumbs.db
 *.njsproj
 *.sln
 *.swp
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.log
+venv/
+env/
+.env
+
+# Project specific
+style.css.bak
+last_response.json

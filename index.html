@@ -9,9 +9,18 @@
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css?v=45">
     <link rel="stylesheet" href="origin-style.css?v=3">
-    <title>Pixel Art Layout</title>
+    <link rel="stylesheet" href="payment-selector.css">
+    <meta name="description"
+        content="Simplex Network - O melhor servidor de Minecraft com economia balanceada, terrenos, kits exclusivos e muito mais. Adquira seu VIP agora!">
+    <meta name="keywords" content="Minecraft, Server, VIP, Simplex Network, Jogos, Multiplayer">
+    <meta property="og:title" content="Simplex Network - Loja Oficial">
+    <meta property="og:description"
+        content="Garanta vantagens exclusivas no Simplex Network. Confira nossos planos VIP!">
+    <meta property="og:type" content="website">
+    <title>Simplex Network</title>
 </head>
 
 <body>
@@ -44,7 +53,7 @@
                                 <span>VER DETALHES</span>
                                 <span class="arrow">➜</span>
                             </div>
-                            <div class="kit-price-subtle">R$ 14,90</div>
+                            <div class="kit-price-subtle">R$ 49,90</div>
                         </div>
                     </div>
 
@@ -58,7 +67,7 @@
                                 <span>VER DETALHES</span>
                                 <span class="arrow">➜</span>
                             </div>
-                            <div class="kit-price-subtle">R$ 24,90</div>
+                            <div class="kit-price-subtle">R$ 79,90</div>
                         </div>
                     </div>
 
@@ -72,7 +81,7 @@
                                 <span>VER DETALHES</span>
                                 <span class="arrow">➜</span>
                             </div>
-                            <div class="kit-price-subtle">R$ 34,90</div>
+                            <div class="kit-price-subtle">R$ 99,90</div>
                         </div>
                     </div>
 
@@ -88,7 +97,7 @@
                                 <span>VER DETALHES</span>
                                 <span class="arrow">➜</span>
                             </div>
-                            <div class="kit-price-subtle">R$ 49,90</div>
+                            <div class="kit-price-subtle">R$ 129,90</div>
                         </div>
                     </div>
                 </div>
@@ -116,23 +125,23 @@
                 </div>
 
                 <div class="purchase-actions">
-                    <h2 class="kit-title-modal">VIP LORD</h2>
+                    <h2 class="kit-title-modal" data-product="LORD">VIP LORD <span class="vip-duration">(1 Mês)</span>
+                    </h2>
                     <p class="kit-subtitle-modal">O início da sua jornada.</p>
 
                     <form class="purchase-form">
-                        <div class="skin-selector">
-                            <label>Tipo de Skin:</label>
-                            <div class="skin-options">
-                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
-                            </div>
-                        </div>
-                        <div>
+                        <div class="input-group-vertical">
                             <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
                                 required autocomplete="off">
+                            <input type="email" class="origin-input email-input" placeholder="Seu melhor e-mail..."
+                                required>
+                            <input type="text" class="origin-input cpf-input" placeholder="CPF (apenas números)..."
+                                required maxlength="11">
                         </div>
 
-                        <!-- Moved purchase box out to footer-like section -->
                     </form>
+
+
                 </div>
             </div>
 
@@ -142,33 +151,30 @@
                     digitar corretamente para receber seu VIP.</p>
             </div>
 
-            <div class="checkout-section">
-                <div class="total-info">
-                    <span class="total-label">❓ Total Estimado</span>
-                    <span class="total-price">R$ 14,90</span>
-                </div>
-                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
-            </div>
+
 
             <!-- Tabela de Comparação de VIPs -->
             <div class="comparison-section-container">
                 <div class="comparison-grid">
                     <!-- Headers -->
+                    <div class="grid-header header-ranks">
+                        <div class="header-title">RANKS</div>
+                    </div>
                     <div class="grid-header header-lord">
                         <div class="header-title">LORD</div>
-                        <div class="header-price">R$ 14,90</div>
+                        <div class="header-price">R$ 49,90</div>
                     </div>
                     <div class="grid-header header-knight">
                         <div class="header-title">KNIGHT</div>
-                        <div class="header-price">R$ 24,90</div>
+                        <div class="header-price">R$ 79,90</div>
                     </div>
                     <div class="grid-header header-guardian">
                         <div class="header-title">GUARDIAN</div>
-                        <div class="header-price">R$ 34,90</div>
+                        <div class="header-price">R$ 99,90</div>
                     </div>
                     <div class="grid-header header-champion">
                         <div class="header-title">CHAMPION</div>
-                        <div class="header-price">R$ 49,90</div>
+                        <div class="header-price">R$ 129,90</div>
                     </div>
 
                     <!-- Section: Terrenos -->
@@ -224,7 +230,14 @@
                 </div>
             </div>
 
-
+            <div class="checkout-footer">
+                <div class="checkout-total-container">
+                    <span class="checkout-total-label">TOTAL</span>
+                    <span class="checkout-total-price">R$ 49,90</span>
+                </div>
+                <div class="payment-selector-container"></div>
+                <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+            </div>
         </div>
     </div>
 
@@ -246,23 +259,23 @@
                 </div>
 
                 <div class="purchase-actions">
-                    <h2 class="kit-title-modal">VIP KNIGHT</h2>
+                    <h2 class="kit-title-modal" data-product="KNIGHT">VIP KNIGHT <span class="vip-duration">(1
+                            Mês)</span></h2>
                     <p class="kit-subtitle-modal">Honra e força em combate.</p>
 
                     <form class="purchase-form">
-                        <div class="skin-selector">
-                            <label>Tipo de Skin:</label>
-                            <div class="skin-options">
-                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
-                            </div>
-                        </div>
-                        <div>
+                        <div class="input-group-vertical">
                             <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
                                 required autocomplete="off">
+                            <input type="email" class="origin-input email-input" placeholder="Seu melhor e-mail..."
+                                required>
+                            <input type="text" class="origin-input cpf-input" placeholder="CPF (apenas números)..."
+                                required maxlength="11">
                         </div>
 
-                        <!-- Moved purchase box out to footer-like section -->
                     </form>
+
+
                 </div>
             </div>
 
@@ -272,33 +285,30 @@
                     digitar corretamente para receber seu VIP.</p>
             </div>
 
-            <div class="checkout-section">
-                <div class="total-info">
-                    <span class="total-label">❓ Total Estimado</span>
-                    <span class="total-price">R$ 24,90</span>
-                </div>
-                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
-            </div>
+
 
             <!-- Tabela de Comparação de VIPs -->
             <div class="comparison-section-container">
                 <div class="comparison-grid">
                     <!-- Headers -->
+                    <div class="grid-header header-ranks">
+                        <div class="header-title">RANKS</div>
+                    </div>
                     <div class="grid-header header-lord">
                         <div class="header-title">LORD</div>
-                        <div class="header-price">R$ 14,90</div>
+                        <div class="header-price">R$ 49,90</div>
                     </div>
                     <div class="grid-header header-knight">
                         <div class="header-title">KNIGHT</div>
-                        <div class="header-price">R$ 24,90</div>
+                        <div class="header-price">R$ 79,90</div>
                     </div>
                     <div class="grid-header header-guardian">
                         <div class="header-title">GUARDIAN</div>
-                        <div class="header-price">R$ 34,90</div>
+                        <div class="header-price">R$ 99,90</div>
                     </div>
                     <div class="grid-header header-champion">
                         <div class="header-title">CHAMPION</div>
-                        <div class="header-price">R$ 49,90</div>
+                        <div class="header-price">R$ 129,90</div>
                     </div>
 
                     <!-- Section: Terrenos -->
@@ -354,7 +364,14 @@
                 </div>
             </div>
 
-
+            <div class="checkout-footer">
+                <div class="checkout-total-container">
+                    <span class="checkout-total-label">TOTAL</span>
+                    <span class="checkout-total-price">R$ 79,90</span>
+                </div>
+                <div class="payment-selector-container"></div>
+                <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+            </div>
         </div>
     </div>
 
@@ -376,23 +393,23 @@
                 </div>
 
                 <div class="purchase-actions">
-                    <h2 class="kit-title-modal">VIP GUARDIAN</h2>
+                    <h2 class="kit-title-modal" data-product="GUARDIAN">VIP GUARDIAN <span class="vip-duration">(1
+                            Mês)</span></h2>
                     <p class="kit-subtitle-modal">Proteção e poder místico.</p>
 
                     <form class="purchase-form">
-                        <div class="skin-selector">
-                            <label>Tipo de Skin:</label>
-                            <div class="skin-options">
-                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
-                            </div>
-                        </div>
-                        <div>
+                        <div class="input-group-vertical">
                             <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
                                 required autocomplete="off">
+                            <input type="email" class="origin-input email-input" placeholder="Seu melhor e-mail..."
+                                required>
+                            <input type="text" class="origin-input cpf-input" placeholder="CPF (apenas números)..."
+                                required maxlength="11">
                         </div>
 
-                        <!-- Moved purchase box out to footer-like section -->
                     </form>
+
+
                 </div>
             </div>
 
@@ -402,33 +419,30 @@
                     digitar corretamente para receber seu VIP.</p>
             </div>
 
-            <div class="checkout-section">
-                <div class="total-info">
-                    <span class="total-label">❓ Total Estimado</span>
-                    <span class="total-price">R$ 34,90</span>
-                </div>
-                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
-            </div>
+
 
             <!-- Tabela de Comparação de VIPs -->
             <div class="comparison-section-container">
                 <div class="comparison-grid">
                     <!-- Headers -->
+                    <div class="grid-header header-ranks">
+                        <div class="header-title">RANKS</div>
+                    </div>
                     <div class="grid-header header-lord">
                         <div class="header-title">LORD</div>
-                        <div class="header-price">R$ 14,90</div>
+                        <div class="header-price">R$ 49,90</div>
                     </div>
                     <div class="grid-header header-knight">
                         <div class="header-title">KNIGHT</div>
-                        <div class="header-price">R$ 24,90</div>
+                        <div class="header-price">R$ 79,90</div>
                     </div>
                     <div class="grid-header header-guardian">
                         <div class="header-title">GUARDIAN</div>
-                        <div class="header-price">R$ 34,90</div>
+                        <div class="header-price">R$ 99,90</div>
                     </div>
                     <div class="grid-header header-champion">
                         <div class="header-title">CHAMPION</div>
-                        <div class="header-price">R$ 49,90</div>
+                        <div class="header-price">R$ 129,90</div>
                     </div>
 
                     <!-- Section: Terrenos -->
@@ -484,7 +498,14 @@
                 </div>
             </div>
 
-
+            <div class="checkout-footer">
+                <div class="checkout-total-container">
+                    <span class="checkout-total-label">TOTAL</span>
+                    <span class="checkout-total-price">R$ 99,90</span>
+                </div>
+                <div class="payment-selector-container"></div>
+                <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+            </div>
         </div>
     </div>
 
@@ -506,23 +527,23 @@
                 </div>
 
                 <div class="purchase-actions">
-                    <h2 class="kit-title-modal">VIP CHAMPION</h2>
+                    <h2 class="kit-title-modal" data-product="CHAMPION">VIP CHAMPION <span class="vip-duration">(1
+                            Mês)</span></h2>
                     <p class="kit-subtitle-modal">A escolha das verdadeiras lendas.</p>
 
                     <form class="purchase-form">
-                        <div class="skin-selector">
-                            <label>Tipo de Skin:</label>
-                            <div class="skin-options">
-                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
-                            </div>
-                        </div>
-                        <div>
+                        <div class="input-group-vertical">
                             <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
                                 required autocomplete="off">
+                            <input type="email" class="origin-input email-input" placeholder="Seu melhor e-mail..."
+                                required>
+                            <input type="text" class="origin-input cpf-input" placeholder="CPF (apenas números)..."
+                                required maxlength="11">
                         </div>
 
-                        <!-- Moved purchase box out to footer-like section -->
                     </form>
+
+
                 </div>
             </div>
 
@@ -532,33 +553,30 @@
                     digitar corretamente para receber seu VIP.</p>
             </div>
 
-            <div class="checkout-section">
-                <div class="total-info">
-                    <span class="total-label">❓ Total Estimado</span>
-                    <span class="total-price">R$ 49,90</span>
-                </div>
-                <button type="button" class="origin-btn pulse-btn checkout-btn">ADQUIRIR AGORA ➜</button>
-            </div>
+
 
             <!-- Tabela de Comparação de VIPs -->
             <div class="comparison-section-container">
                 <div class="comparison-grid">
                     <!-- Headers -->
+                    <div class="grid-header header-ranks">
+                        <div class="header-title">RANKS</div>
+                    </div>
                     <div class="grid-header header-lord">
                         <div class="header-title">LORD</div>
-                        <div class="header-price">R$ 14,90</div>
+                        <div class="header-price">R$ 49,90</div>
                     </div>
                     <div class="grid-header header-knight">
                         <div class="header-title">KNIGHT</div>
-                        <div class="header-price">R$ 24,90</div>
+                        <div class="header-price">R$ 79,90</div>
                     </div>
                     <div class="grid-header header-guardian">
                         <div class="header-title">GUARDIAN</div>
-                        <div class="header-price">R$ 34,90</div>
+                        <div class="header-price">R$ 99,90</div>
                     </div>
                     <div class="grid-header header-champion">
                         <div class="header-title">CHAMPION</div>
-                        <div class="header-price">R$ 49,90</div>
+                        <div class="header-price">R$ 129,90</div>
                     </div>
 
                     <!-- Section: Terrenos -->
@@ -616,9 +634,19 @@
 
             <div class="modal-info-section premium-info">
             </div>
+
+            <div class="checkout-footer">
+                <div class="checkout-total-container">
+                    <span class="checkout-total-label">TOTAL</span>
+                    <span class="checkout-total-price">R$ 129,90</span>
+                </div>
+                <div class="payment-selector-container"></div>
+                <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+            </div>
         </div>
     </div>
 
+    <script src="payment-selector.js"></script>
     <script src="script.js"></script>
     <script src="tests.js"></script>
 </body>

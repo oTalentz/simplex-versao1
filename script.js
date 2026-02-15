@@ -109,97 +109,318 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupForm(modalContext) {
         const nicknameInput = modalContext.querySelector('.nickname-input');
+        const emailInput = modalContext.querySelector('.email-input');
+        const cpfInput = modalContext.querySelector('.cpf-input');
+        // Cellphone removed
         // Update selector to include origin-btn
-        const buyButton = modalContext.querySelector('.btn-buy-yellow') || modalContext.querySelector('.btn-buy') || modalContext.querySelector('.origin-btn');
+        const buyButton = modalContext.querySelector('.btn-buy-footer');
         const form = modalContext.querySelector('.purchase-form');
         const avatarPreviewImg = modalContext.querySelector('.avatar-preview-img');
 
-        // Removed skinOptions listener logic as we only support 'nick' now
         let typingTimer;
         const doneTypingInterval = 800;
 
         if (!nicknameInput || !buyButton || !form) return;
 
-        // Create feedback element if not exists
-        let feedbackMsg = modalContext.querySelector('.nick-feedback');
-        if (!feedbackMsg) {
-            feedbackMsg = document.createElement('div');
-            feedbackMsg.className = 'nick-feedback';
-            feedbackMsg.style.fontSize = '0.8rem';
-            feedbackMsg.style.marginTop = '5px';
-            feedbackMsg.style.height = '1.2em'; // Reserve space
-            nicknameInput.parentNode.appendChild(feedbackMsg);
+        // Helper to create feedback element
+        const createFeedback = (input, className) => {
+            let feedback = modalContext.querySelector(`.${className}`);
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.className = className;
+                feedback.style.fontSize = '0.8rem';
+                feedback.style.marginTop = '5px';
+                feedback.style.height = '1.2em';
+                input.parentNode.insertBefore(feedback, input.nextSibling);
+            }
+            return feedback;
+        };
+
+        const nickFeedback = createFeedback(nicknameInput, 'nick-feedback');
+        const emailFeedback = emailInput ? createFeedback(emailInput, 'email-feedback') : null;
+        const cpfFeedback = cpfInput ? createFeedback(cpfInput, 'cpf-feedback') : null;
+
+        // Validation State
+        const validationState = {
+            nick: false,
+            email: false,
+            cpf: false,
+            paymentMethod: false
+        };
+
+        const updateButtonState = () => {
+            const isValid = validationState.nick &&
+                (!emailInput || validationState.email) &&
+                (!cpfInput || validationState.cpf) &&
+                validationState.paymentMethod;
+            buyButton.disabled = !isValid;
+        };
+
+        // Payment Selector Integration
+        let paymentSelectorInstance;
+        const paymentContainer = modalContext.querySelector('.payment-selector-container');
+        if (paymentContainer && window.PaymentSelector) {
+            paymentSelectorInstance = new window.PaymentSelector(paymentContainer, (method) => {
+                validationState.paymentMethod = !!method;
+                updateButtonState();
+            });
         }
 
+        // Nickname Validation
         nicknameInput.addEventListener('input', () => {
             const value = nicknameInput.value.trim();
             const isValidFormat = /^[a-zA-Z0-9_]{3,16}$/.test(value);
 
-            // Reset state
             nicknameInput.classList.remove('valid', 'invalid');
-            // buyButton.disabled = true;
-            feedbackMsg.textContent = '';
-
-            // All modals now have yellow highlight box
-            const isChampion = modalContext.classList.contains('champion-modal');
-            const neutralColor = '#4a2c1d';
-
-            feedbackMsg.style.color = neutralColor;
+            nickFeedback.textContent = '';
+            nickFeedback.style.color = '#4a2c1d'; // Neutral
 
             clearTimeout(typingTimer);
+            validationState.nick = false;
+            updateButtonState();
 
             if (isValidFormat) {
-                feedbackMsg.textContent = 'Verificando disponibilidade...';
-                // Ensure visibility on yellow background
-                feedbackMsg.style.color = '#d35400';
+                nickFeedback.textContent = 'Verificando disponibilidade...';
+                nickFeedback.style.color = '#d35400';
 
                 typingTimer = setTimeout(() => {
                     // Simulate API check
-                    const isAvailable = true;
+                    const isAvailable = true; // Mock availability
 
                     if (isAvailable) {
                         nicknameInput.classList.add('valid');
-                        buyButton.disabled = false;
-                        feedbackMsg.textContent = '✓ Nick disponível';
-                        feedbackMsg.style.color = '#27ae60'; // Darker green for visibility on yellow
-
+                        nickFeedback.textContent = '✓ Nick disponível';
+                        nickFeedback.style.color = '#27ae60';
+                        validationState.nick = true;
                         if (avatarPreviewImg) updateAvatar(avatarPreviewImg, value);
                     } else {
                         nicknameInput.classList.add('invalid');
-                        feedbackMsg.textContent = '✕ Nick indisponível';
-                        feedbackMsg.style.color = '#e74c3c'; // Red
+                        nickFeedback.textContent = '✕ Nick indisponível';
+                        nickFeedback.style.color = '#e74c3c';
+                        validationState.nick = false;
                     }
+                    updateButtonState();
                 }, doneTypingInterval);
             } else {
                 if (value.length > 0) {
-                    feedbackMsg.textContent = 'Formato inválido (3-16 caracteres, letras/números/_)';
-                    feedbackMsg.style.color = '#e74c3c';
+                    nickFeedback.textContent = 'Formato inválido (3-16 caracteres, letras/números/_)';
+                    nickFeedback.style.color = '#e74c3c';
                 }
-
-                if (value === '') {
-                    if (avatarPreviewImg) updateAvatar(avatarPreviewImg, 'Steve');
-                }
+                if (value === '' && avatarPreviewImg) updateAvatar(avatarPreviewImg, 'Steve');
             }
         });
 
+        // Email Validation
+        if (emailInput) {
+            emailInput.addEventListener('input', () => {
+                const value = emailInput.value.trim();
+                const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+                emailInput.classList.remove('valid', 'invalid');
+                emailFeedback.textContent = '';
+
+                if (isValid) {
+                    emailInput.classList.add('valid');
+                    validationState.email = true;
+                } else {
+                    if (value.length > 0) {
+                        emailInput.classList.add('invalid');
+                        emailFeedback.textContent = 'E-mail inválido';
+                        emailFeedback.style.color = '#e74c3c';
+                    }
+                    validationState.email = false;
+                }
+                updateButtonState();
+            });
+        }
+
+        // CPF Validation
+        if (cpfInput) {
+            cpfInput.addEventListener('input', () => {
+                let value = cpfInput.value.replace(/\D/g, ''); // Remove non-digits
+                if (value.length > 11) value = value.slice(0, 11);
+                cpfInput.value = value;
+
+                const isValid = value.length === 11;
+
+                cpfInput.classList.remove('valid', 'invalid');
+                cpfFeedback.textContent = '';
+
+                if (isValid) {
+                    cpfInput.classList.add('valid');
+                    validationState.cpf = true;
+                } else {
+                    if (value.length > 0) {
+                        cpfInput.classList.add('invalid');
+                        cpfFeedback.textContent = 'CPF deve ter 11 dígitos';
+                        cpfFeedback.style.color = '#e74c3c';
+                    }
+                    validationState.cpf = false;
+                }
+                updateButtonState();
+            });
+        }
+
+        // Cellphone Validation Removed
+
+
+        // Handle Enter key in form
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            const nickname = nicknameInput.value.trim();
-            const kitNameEl = modalContext.querySelector('.kit-title-modal');
-            const kitName = kitNameEl ? kitNameEl.innerText.replace('KIT ', '') : 'VIP';
+            if (!buyButton.disabled) buyButton.click();
+        });
 
-            // Simulação de compra
+        // Helper to show PIX Modal
+        const showPixModal = (modal, pixData) => {
+            const highlightBox = modal.querySelector('.modal-highlight-box');
+            const checkoutSection = modal.querySelector('.checkout-section');
+            const footerSection = modal.querySelector('.checkout-footer');
+            const helpSection = modal.querySelector('.help-text-section');
+            const comparisonSection = modal.querySelector('.comparison-section-container');
+            const topBar = modal.querySelector('.modal-top-bar');
+            const countdownBanner = modal.querySelector('.countdown-banner');
+
+            // Hide other sections
+            if (checkoutSection) checkoutSection.style.display = 'none';
+            if (footerSection) footerSection.style.display = 'none';
+            if (helpSection) helpSection.style.display = 'none';
+            if (comparisonSection) comparisonSection.style.display = 'none';
+            if (countdownBanner) countdownBanner.style.display = 'none';
+
+            // Ensure base64 prefix
+            const base64Src = pixData.brCodeBase64.startsWith('data:')
+                ? pixData.brCodeBase64
+                : `data:image/png;base64,${pixData.brCodeBase64}`;
+
+            // Update Highlight Box with PIX Content
+            highlightBox.innerHTML = `
+                <div class="pix-container" style="color: #eee;">
+                    <div class="pix-title" style="color: #ffc107; font-weight: 900; font-size: 1.5rem; text-shadow: 2px 2px 0px rgba(0,0,0,0.8); margin-bottom: 15px; font-family: 'Press Start 2P', cursive;">PAGAMENTO VIA PIX</div>
+                    <div style="background: white; padding: 10px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.5);">
+                        <img src="${base64Src}" alt="QR Code PIX" class="pix-qr-image" style="width: 200px; height: 200px; display: block;">
+                    </div>
+                    
+                    <p class="pix-instructions" style="color: #ddd; font-weight: 500; margin-top: 15px; text-align: center; line-height: 1.6; font-size: 0.9rem;">
+                        1. Abra o app do seu banco.<br>
+                        2. Escolha pagar via PIX > Ler QR Code.<br>
+                        3. Escaneie a imagem ou cole o código abaixo.
+                    </p>
+
+                    <div class="pix-copy-container" style="display: flex; gap: 10px; margin-top: 15px; width: 100%; max-width: 400px;">
+                        <input type="text" class="pix-copy-input" value="${pixData.brCode}" readonly style="flex: 1; padding: 10px; border: 1px solid #444; border-radius: 6px; font-weight: bold; color: #fff; background: #1a1a1a;">
+                        <button class="pix-copy-btn" title="Copiar Código" style="background: #ffc107; color: #000; border: none; padding: 0 20px; font-weight: bold; border-radius: 6px; cursor: pointer; font-family: 'Press Start 2P', cursive; font-size: 0.7rem;">
+                            COPIAR
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 20px; color: #aaa; font-weight: 500; font-size: 0.8rem; text-align: center; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border: 1px solid #333;">
+                        Após o pagamento, seu VIP será ativado automaticamente em até 5 minutos.
+                    </div>
+                </div>
+            `;
+
+            // Re-style highlight box for better fit and dark theme
+            highlightBox.style.background = '#111';
+            highlightBox.style.border = '1px solid #333';
+            highlightBox.style.flexDirection = 'column';
+            highlightBox.style.height = 'auto';
+            highlightBox.style.padding = '20px';
+
+            // Add Copy Functionality
+            const copyBtn = highlightBox.querySelector('.pix-copy-btn');
+            const copyInput = highlightBox.querySelector('.pix-copy-input');
+
+            if (copyBtn && copyInput) {
+                copyBtn.addEventListener('click', () => {
+                    copyInput.select();
+                    copyInput.setSelectionRange(0, 99999); // Mobile
+                    navigator.clipboard.writeText(copyInput.value).then(() => {
+                        const originalText = copyBtn.textContent;
+                        copyBtn.textContent = 'COPIADO!';
+                        copyBtn.style.background = '#27ae60';
+                        setTimeout(() => {
+                            copyBtn.textContent = originalText;
+                            copyBtn.style.background = '';
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy: ', err);
+                        // Fallback
+                        document.execCommand('copy');
+                        copyBtn.textContent = 'COPIADO!';
+                    });
+                });
+            }
+        };
+
+        // Change from form submit to button click because button is outside form
+        buyButton.addEventListener('click', async (e) => {
+            e.preventDefault();
+
+            if (buyButton.disabled) return;
+
+            const selectedMethod = paymentSelectorInstance ? paymentSelectorInstance.getSelectedMethod() : null;
+
+            if (selectedMethod === 'credit_card') {
+                alert('Pagamento via Cartão de Crédito selecionado. Redirecionando para gateway seguro...');
+                // Implement Card logic here
+                return;
+            }
+
+            // Default to PIX logic below
+
+            const nickname = nicknameInput.value.trim();
+            const email = emailInput ? emailInput.value.trim() : '';
+            const cpf = cpfInput ? cpfInput.value.trim() : '';
+            // Cellphone removed
+            const kitNameEl = modalContext.querySelector('.kit-title-modal');
+            // Use data-product attribute if available, otherwise fallback to parsing text
+            const kitName = kitNameEl ? (kitNameEl.getAttribute('data-product') || kitNameEl.innerText.replace('KIT ', '')) : 'VIP';
+
             const originalText = buyButton.textContent;
-            buyButton.textContent = 'PROCESSANDO...';
+            buyButton.textContent = 'GERANDO PIX...';
             buyButton.disabled = true;
 
-            setTimeout(() => {
-                alert(`Redirecionando para pagamento do ${kitName} para: ${nickname}`);
-                buyButton.textContent = 'CONTINUAR PARA PAGAMENTO';
+            try {
+                // Use Transparent PIX Checkout
+                const endpoint = 'http://localhost:5000/create-pix-payment';
+
+                console.log(`Initiating PIX payment to ${endpoint}`);
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        nickname,
+                        email,
+                        cpf,
+                        product: kitName
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.brCodeBase64) {
+                        // Success! Show PIX QR Code inside modal
+                        showPixModal(modalContext, data);
+                    } else {
+                        throw new Error('Dados do PIX não retornados.');
+                    }
+                } else {
+                    throw new Error(data.error || 'Erro ao criar pagamento');
+                }
+            } catch (error) {
+                console.error(error);
+                alert('Erro ao processar pagamento: ' + error.message);
+                buyButton.textContent = originalText;
                 buyButton.disabled = false;
-                closeModal(modalContext);
-            }, 1500);
+                // Force re-validation check to ensure button state is correct
+                updateButtonState();
+            }
         });
+
+        // Initial button state check
+        updateButtonState();
     }
 
     function updateAvatar(imgElement, username) {

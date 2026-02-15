@@ -1,0 +1,89 @@
+.payment-selector {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    /* margin-right removed to group with button */
+}
+
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid #444;
+    padding: 8px 16px;
+    border-radius: 6px;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    outline: none;
+}
+
+.payment-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #666;
+}
+
+.payment-option:focus-visible {
+    box-shadow: 0 0 0 2px #ffc107;
+}
+
+.payment-option.selected {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #ffc107;
+    color: #ffc107;
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.1);
+}
+
+.payment-option.selected .payment-icon {
+    color: #ffc107;
+}
+
+.payment-icon {
+    color: #999;
+    font-size: 1.1rem;
+    transition: color 0.2s;
+}
+
+/* Adjustments for the checkout footer layout */
+.checkout-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Align right by default */
+    flex-wrap: wrap;
+    gap: 10px; /* Smaller gap between selector and button */
+}
+
+.checkout-total-container {
+    margin-right: auto; /* Push total to the far left */
+}
+
+/* Responsiveness */
+@media (max-width: 480px) {
+    .payment-selector {
+        width: 100%;
+        justify-content: space-between;
+        margin-right: 0;
+        margin-bottom: 10px;
+        order: -1;
+        /* Ensure it appears above button on mobile if needed, or adjust flex order */
+    }
+
+    .payment-option {
+        flex: 1;
+        justify-content: center;
+    }
+
+    .checkout-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .checkout-total-container {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+}
