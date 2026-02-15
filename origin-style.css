@@ -343,7 +343,7 @@
 /* Purple */
 .header-champion {
     background: linear-gradient(135deg, #ffd700, #ffaa00);
-    color: #000;
+    /* color: #000;  Removed to be white like others */
 }
 
 /* Gold */
@@ -375,10 +375,11 @@
     opacity: 0.9;
 }
 
-.header-champion .header-title {
+/* Removed specific override for champion title to match others (white text + shadow) */
+/* .header-champion .header-title {
     color: #000;
     text-shadow: none;
-}
+} */
 
 /* Section Titles */
 .grid-section-title {
