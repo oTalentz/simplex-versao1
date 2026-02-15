@@ -1,0 +1,1388 @@
+:root {
+    --bg-wood-dark: #2c1810;
+    --bg-wood-light: #4a2c1d;
+    --text-color: #2c1810;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #1a120b;
+    /* Camadas de textura:
+       1. Vinheta forte (foco no centro)
+       2. Ruído/Granulação (simulando papel velho)
+       3. Textura de fibras entrelaçadas (linho/papiro)
+       4. Gradiente base terroso
+    */
+    background-image:
+        radial-gradient(circle at 50% 50%, transparent 20%, rgba(10, 5, 2, 0.85) 100%),
+        repeating-linear-gradient(45deg, rgba(194, 164, 104, 0.03) 0px, rgba(194, 164, 104, 0.03) 1px, transparent 1px, transparent 4px),
+        repeating-linear-gradient(-45deg, rgba(194, 164, 104, 0.03) 0px, rgba(194, 164, 104, 0.03) 1px, transparent 1px, transparent 4px),
+        linear-gradient(to bottom, #2c1e14 0%, #1a120b 100%);
+    background-attachment: fixed;
+    background-size: cover, 100% 100%, 100% 100%, 100% 100%;
+
+    font-family: 'Press Start 2P', monospace;
+    color: var(--text-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Borda Ornamental Medieval */
+body::before {
+    content: "";
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    border: 2px solid rgba(194, 164, 104, 0.3);
+    outline: 1px solid rgba(10, 5, 2, 0.5);
+    outline-offset: 4px;
+    border-radius: 8px;
+    z-index: 50;
+    pointer-events: none;
+    box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.8);
+}
+
+/* Detalhe de cantos ornamentais (simulado com pseudo-elementos) */
+body::after {
+    content: "";
+    position: fixed;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    bottom: 15px;
+    z-index: 50;
+    pointer-events: none;
+    /* Cantos dourados */
+    background:
+        linear-gradient(135deg, rgba(194, 164, 104, 0.6) 10px, transparent 0) top left,
+        linear-gradient(225deg, rgba(194, 164, 104, 0.6) 10px, transparent 0) top right,
+        linear-gradient(315deg, rgba(194, 164, 104, 0.6) 10px, transparent 0) bottom right,
+        linear-gradient(45deg, rgba(194, 164, 104, 0.6) 10px, transparent 0) bottom left;
+    background-size: 20px 20px;
+    background-repeat: no-repeat;
+}
+
+.main-container {
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+}
+
+/* Animação de abertura do pergaminho */
+@keyframes scroll-open {
+    0% {
+        clip-path: inset(50% 0 50% 0);
+        filter: brightness(0.5);
+    }
+
+    100% {
+        clip-path: inset(0 0 0 0);
+        filter: brightness(1);
+    }
+}
+
+.scroll-container {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    /* Animação do pergaminho se abrindo */
+    animation: scroll-open 1.0s cubic-bezier(0.45, 0, 0.55, 1) forwards;
+}
+
+.scroll-bg {
+    width: 100%;
+    display: block;
+    height: auto;
+    image-rendering: pixelated;
+}
+
+.content-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Padding percentual para alinhar com a arte do pergaminho */
+    padding-top: 30%;
+    /* Reduzido para subir o conteúdo levemente */
+    padding-left: 12%;
+    padding-right: 12%;
+    padding-bottom: 15%;
+}
+
+.header-wrapper {
+    position: relative;
+    width: 90%;
+    /* Ajuste para caber "Panteão Heroico" em uma linha */
+    height: auto;
+    margin-bottom: 8%;
+    /* Aumentado para abaixar os cards */
+    margin-top: 5%;
+
+    /* Estado inicial invisível */
+    opacity: 0;
+    /* Animação de entrada com delay para esperar o pergaminho */
+    animation: card-entrance 1.0s var(--ease-elastic) 0.8s forwards;
+
+    display: flex;
+    justify-content: center;
+    /* Centralizado */
+    align-items: center;
+}
+
+/* Nova imagem do cabeçalho Panteão */
+.pantheon-header-img {
+    width: 90%;
+    /* Aumentado para banners mais largos */
+    max-width: 550px;
+    height: auto;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 4px 6px rgba(44, 24, 16, 0.3));
+    /* Sombra sutil marrom */
+
+    /* Animação Heroica Melhorada */
+    animation: heroic-banner-float 4s ease-in-out infinite;
+    will-change: transform, filter;
+}
+
+/* Animação Heroica: Flutuação + Respiração + Brilho */
+@keyframes heroic-banner-float {
+
+    0%,
+    100% {
+        transform: translateY(0) scale(1);
+        filter: drop-shadow(0 4px 6px rgba(44, 24, 16, 0.3)) brightness(1);
+    }
+
+    50% {
+        transform: translateY(-8px) scale(1.02);
+        /* Sobe e cresce levemente */
+        filter: drop-shadow(0 15px 10px rgba(44, 24, 16, 0.2)) brightness(1.1);
+        /* Sombra aumenta e brilha */
+    }
+}
+
+/* Simple Pantheon Title (Pixel Art) */
+.pantheon-title-simple {
+    font-family: 'Press Start 2P', monospace;
+    font-weight: 400;
+    font-size: 3rem;
+    line-height: 1.3;
+    color: #2c1810;
+    /* Marrom escuro */
+
+    /* Reset de gradients */
+    background: none;
+    -webkit-text-fill-color: initial;
+    filter: none;
+    text-shadow: none;
+
+    margin: 0;
+    text-transform: uppercase;
+    text-align: center;
+    /* Centralizado */
+
+    position: relative;
+    display: block;
+    padding-bottom: 0;
+    width: 100%;
+    flex: 1;
+    letter-spacing: -1px;
+    white-space: normal;
+
+    /* Animação de Flutuação (Antigravidade) */
+    animation: pantheon-float 3s ease-in-out infinite;
+}
+
+/* Flutuação do Panteão */
+@keyframes pantheon-float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Remove decorative elements */
+.pantheon-title-simple::after,
+.pantheon-title-simple::before {
+    display: none;
+}
+
+.hero-container {
+    position: relative;
+    width: auto;
+    height: 110px;
+    margin-right: 35px;
+    /* Preserved position */
+    transform: translateY(-5px);
+    /* Preserved position */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    /* Shadow below image */
+}
+
+/* Remove old sunburst */
+.hero-sunburst {
+    display: none;
+}
+
+.hero-shadow-effect {
+    width: 60px;
+    height: 12px;
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 50%;
+    margin-top: 15px;
+    /* Distance from feet */
+    filter: blur(4px);
+    z-index: 0;
+
+    /* Animation: Shadow Pulse */
+    animation: shadow-breathe 4s ease-in-out infinite;
+}
+
+.hero-character-img {
+    height: 110px;
+    width: auto;
+    transform: scaleX(-1);
+    object-fit: contain;
+    margin-right: 0;
+    z-index: 1;
+
+    /* Animation: Cosmic Float */
+    animation: hero-levitate 4s ease-in-out infinite;
+    will-change: transform, filter;
+}
+
+/* Levitation: Smooth Up/Down + Subtle Tilt */
+@keyframes hero-levitate {
+
+    0%,
+    100% {
+        transform: scaleX(-1) translateY(0px) rotate(0deg);
+        filter: drop-shadow(0px 5px 2px rgba(0, 0, 0, 0.2)) brightness(1);
+    }
+
+    50% {
+        transform: scaleX(-1) translateY(-15px) rotate(2deg);
+        /* Floats Up & Tilts */
+        filter: drop-shadow(0px 15px 5px rgba(0, 0, 0, 0.1)) brightness(1.05);
+        /* Lighter shadow on body */
+    }
+}
+
+/* Shadow: Shrinks/Fades when hero goes up */
+@keyframes shadow-breathe {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: 0.4;
+        filter: blur(4px);
+    }
+
+    50% {
+        transform: scale(0.6);
+        /* Smaller when high */
+        opacity: 0.15;
+        /* Fainter when high */
+        filter: blur(6px);
+        /* More diffuse when high */
+    }
+}
+
+/* Remover pseudo-elementos */
+.pantheon-title-simple::after,
+.pantheon-title-simple::before {
+    display: none;
+}
+
+.cards-container {
+    width: 90%;
+    /* Ajuste fino para largura dos cards dentro da área útil */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Aplica margem inferior em todos os filhos diretos do container de cards */
+.cards-container>* {
+    margin-bottom: 4%;
+    /* Reduzido espaçamento conforme solicitado */
+}
+
+/* Remove a margem do último filho para não sobrar espaço no final */
+.cards-container>*:last-child {
+    margin-bottom: 0;
+}
+
+.rect-card {
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    display: block;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* --- ANIMATION: LEGENDARY CARD --- */
+
+/* Curvas de Bézier personalizadas para movimento natural */
+:root {
+    --ease-elastic: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --ease-smooth: cubic-bezier(0.45, 0, 0.55, 1);
+}
+
+/* O container do primeiro card (Laranja) */
+.card-wrapper {
+    position: relative;
+    width: 92%;
+    /* Reduzido de 100% para dar destaque ao Champion */
+    /* Perspectiva para efeitos 3D nos filhos */
+    perspective: 1000px;
+    /* Otimização de performance */
+    will-change: transform, filter;
+    /* Garante que a etiqueta possa sair da borda */
+    overflow: visible;
+
+    /* Estado inicial invisível */
+    opacity: 0;
+
+    /* Animação de entrada e loop contínuo - Com Delay para efeito cascata */
+    animation:
+        card-entrance 1.0s var(--ease-elastic) 1.0s forwards,
+        card-levitate 4s ease-in-out infinite 2.0s;
+
+    /* Sombra dinâmica inicial */
+    filter: drop-shadow(0 5px 15px rgba(255, 165, 0, 0.3));
+}
+
+/* Mantém o Kit Champion com tamanho total para destaque */
+#kit-champion-card.card-wrapper {
+    width: 100%;
+    margin-top: 10px;
+    /* Um pouco mais de espaço antes dele */
+}
+
+/* Staggered animation delays for cards */
+.card-wrapper:nth-child(1) {
+    animation-delay: 1.0s, 2.0s;
+}
+
+.card-wrapper:nth-child(2) {
+    animation-delay: 1.2s, 2.2s;
+}
+
+.card-wrapper:nth-child(3) {
+    animation-delay: 1.4s, 2.4s;
+}
+
+.card-wrapper:nth-child(4) {
+    animation-delay: 1.6s, 2.6s;
+}
+
+.card-wrapper:hover {
+    /* Pausa a animação de levitação removida para evitar travar o card invisível na entrada */
+    /* animation-play-state: paused; */
+
+    /* Feedback visual de "Seleção" (Hover) */
+    /* Transform removido pois conflita com a animação ativa.
+       O efeito de escala será aplicado nos elementos internos ou via filtro.
+    */
+    /* transform: scale(1.05) translateY(-5px); */
+
+    z-index: 100;
+    /* Fica por cima de todos */
+    cursor: pointer;
+    /* Cursor de mãozinha */
+
+    /* Efeito de SELEÇÃO PIXELADA (Contorno Sólido Branco) */
+    filter:
+        drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(4px 4px 0 rgba(0, 0, 0, 0.5)) brightness(1.1);
+    /* Sombra dura de profundidade + Brilho */
+
+    transition: filter 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    /* Snappy pop */
+}
+
+/* Aplica escala na imagem do card para simular o zoom sem conflitar com a animação do wrapper */
+.card-wrapper:hover .rect-card {
+    transform: scale(1.05);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Zoom nos textos e botão (Info Container) */
+.card-wrapper:hover .kit-info-container {
+    transform: scale(1.05);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Zoom no ícone do chapéu - Pausa animação e foca */
+.card-wrapper:hover .hat-icon {
+    animation: none;
+    /* Para a animação de flutuação para focar */
+    transform: translate(-50%, -50%) scale(1.2);
+    /* Aumenta o ícone mantendo o centro */
+    filter: drop-shadow(0 10px 10px rgba(0, 0, 0, 0.4));
+    /* Sombra mais forte */
+    z-index: 20;
+    /* Garante que fique acima de tudo */
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Destaca o botão "VER DETALHES" ao passar o mouse no card */
+.card-wrapper:hover .click-indicator {
+    background-color: #fff;
+    /* Fundo branco para contraste máximo */
+    color: #2c1810;
+    /* Texto escuro */
+    transform: scale(1.1);
+    /* Cresce levemente */
+    box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3);
+    /* Sombra dura pixelada */
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Anima a seta dentro do botão */
+.card-wrapper:hover .click-indicator .arrow {
+    transform: translateX(3px);
+    /* Move para a direita indicando ação */
+    color: #d35400;
+    /* Laranja destaque */
+}
+
+/* O Ícone do Chapéu */
+.hat-icon {
+    position: absolute;
+    /* Restaurado para garantir posicionamento correto */
+    left: 21%;
+    top: 46%;
+    transform: translate(-50%, -50%);
+    width: 20%;
+    height: auto;
+    filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.3));
+    z-index: 10;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+    /* Otimização */
+    will-change: transform;
+
+    /* Animação complexa composta: Flutuação + Rotação 3D + Pulso */
+    animation: hat-legendary-motion 3s ease-in-out infinite;
+}
+
+/* --- KEYFRAMES --- */
+
+/* Entrada triunfal do card */
+@keyframes card-entrance {
+    0% {
+        opacity: 0;
+        transform: translateY(30px) scale(0.9) rotateX(10deg);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1) rotateX(0);
+    }
+}
+
+/* Flutuação suave do card (respiração) */
+@keyframes card-levitate {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        filter: drop-shadow(0 5px 15px rgba(255, 165, 0, 0.3));
+    }
+
+    50% {
+        transform: translateY(-6px);
+        filter: drop-shadow(0 15px 20px rgba(255, 165, 0, 0.5));
+    }
+}
+
+/* Movimento complexo do chapéu */
+@keyframes hat-legendary-motion {
+    0% {
+        transform: translate(-50%, -50%) rotateY(0deg) scale(1);
+    }
+
+    25% {
+        transform: translate(-50%, -56%) rotateY(15deg) scale(1.05);
+    }
+
+    50% {
+        transform: translate(-50%, -50%) rotateY(0deg) scale(1);
+    }
+
+    75% {
+        transform: translate(-50%, -44%) rotateY(-15deg) scale(1.05);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotateY(0deg) scale(1);
+    }
+}
+
+
+/* Responsividade */
+@media (max-width: 480px) {
+    .content-overlay {
+        padding-top: 20%;
+        padding-left: 10%;
+        padding-right: 10%;
+    }
+
+    .rect-header {
+        width: 65%;
+    }
+}
+
+/* --- KIT LORD CONTENT --- */
+.kit-info-container {
+    position: absolute;
+    top: 0;
+    left: 42%;
+    width: 55%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    color: #4a2c1d;
+    z-index: 5;
+    padding-bottom: 2%;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    pointer-events: none;
+    /* Removed overflow: hidden to prevent button clipping on hover */
+    /* overflow: hidden; */
+    padding-right: 5px;
+    padding-left: 2px;
+    /* Slight padding to prevent left cut-off */
+}
+
+.kit-title {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    font-size: 1.05rem;
+    /* Reduzido de 1.15rem (~9%) */
+    line-height: 1.1;
+    text-transform: uppercase;
+    color: #3b2816;
+    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.2);
+    margin: 0;
+    margin-bottom: 2px;
+    /* Espaço reduzido */
+}
+
+/* Price Tag Styles removed as requested */
+
+/* Estilos removidos conforme solicitação */
+
+/* Preço posicionado no topo direito */
+.kit-price-subtle {
+    position: absolute;
+    top: 15px;
+    /* Abaixado levemente o alinhamento */
+    right: 15px;
+    /* Movido levemente para a esquerda */
+    font-family: 'Rubik', sans-serif;
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: #2c1e10;
+    /* Preto suave (marrom muito escuro) */
+    letter-spacing: 0.5px;
+    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.45);
+    /* Sombra de realce branco para destacar */
+    margin: 0;
+    /* Remove margens anteriores */
+}
+
+/* Ajuste sutil para o Kit Champion */
+#kit-champion-card .kit-price-subtle {
+    color: #2c1e10;
+    /* Mantém escuro e legível */
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.6);
+    /* Mais brilho no dourado */
+}
+
+#kit-champion-card .kit-title {
+    font-size: 1.05rem;
+    /* Igualado aos outros para consistência */
+    /* Slightly smaller for Champion if needed */
+}
+
+#kit-champion-card .kit-info-container {
+    left: 45%;
+    /* Move slightly right to clear the crown */
+    width: 52%;
+}
+
+/* Adjust Crown Position for Champion Kit */
+#kit-champion-card .hat-icon {
+    left: 17%;
+    top: 38%;
+}
+
+.click-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.55rem;
+    /* Reduzido de 0.6rem (~8%) */
+    font-weight: 800;
+    color: rgba(59, 40, 22, 0.7);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 0.8;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
+/* --- MODAL STYLES (Dark Modern Theme) --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    /* Darker overlay */
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background: #111;
+    /* Almost black background */
+    width: 90%;
+    max-width: 600px;
+    /* Max height for scrollable content */
+    max-height: 90vh;
+    overflow-y: auto;
+
+    border-radius: 8px;
+    /* Slightly rounded, not excessive */
+    border: 1px solid #333;
+    /* Subtle border */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    position: relative;
+    transform: scale(0.95) translateY(10px);
+    transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    /* Clean sans-serif */
+    color: #eee;
+}
+
+/* Global Scrollbar Styling (Suave/Dark) */
+::-webkit-scrollbar {
+    width: 6px;
+    /* Mais fino para ser mais suave */
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+    /* Fundo transparente para misturar */
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    /* Cinza translúcido sutil */
+    border-radius: 10px;
+    /* Bem arredondado */
+    transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.4);
+    /* Um pouco mais visível ao passar o mouse */
+}
+
+/* Firefox Support */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.modal-overlay.active .modal-container {
+    transform: scale(1) translateY(0);
+}
+
+/* Header Bar */
+.modal-top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: transparent;
+}
+
+.modal-title-simple {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+.modal-close {
+    background: #333;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.modal-close:hover {
+    background: #555;
+}
+
+/* Yellow Highlight Box */
+.modal-highlight-box {
+    background: #ffc107;
+    /* Reference Yellow */
+    margin: 0 20px;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-preview {
+    flex-shrink: 0;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.avatar-3d-placeholder {
+    height: 100px;
+    width: auto;
+    filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.2));
+    transition: transform 0.3s;
+}
+
+.purchase-actions {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.input-group-dark {
+    width: 100%;
+}
+
+.input-group-dark input {
+    width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 15px;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.input-group-dark input:focus {
+    border-color: #555;
+    background: #222;
+}
+
+.btn-buy-yellow {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(0, 0, 0, 0.1);
+    color: #333;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.btn-buy-yellow:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-buy-yellow:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Info Section */
+.modal-info-section {
+    padding: 20px;
+    background: transparent;
+}
+
+.info-question {
+    font-size: 0.9rem;
+    color: #fff;
+    margin-bottom: 8px;
+    font-weight: 700;
+}
+
+.info-answer {
+    font-size: 0.85rem;
+    color: #aaa;
+    line-height: 1.5;
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+.info-answer strong {
+    color: #ddd;
+}
+
+.benefits-mini-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.mini-tag {
+    background: #222;
+    color: #ccc;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #333;
+}
+
+.price-display-simple {
+    border-top: 1px solid #222;
+    padding-top: 15px;
+    font-size: 0.9rem;
+    color: #888;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.price-value {
+    color: #ffc107;
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+@media (max-width: 480px) {
+    .modal-highlight-box {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .avatar-preview {
+        margin-bottom: 10px;
+    }
+}
+
+/* --- PREMIUM CHAMPION KIT STYLES --- */
+
+/* Premium Card Highlight */
+.champion-card-highlight {
+    position: relative;
+    border-radius: 12px;
+    /* Remove o filtro laranja do card-wrapper para não conflitar com o dourado */
+    filter: none;
+    /* Box-shadow dourado inicial */
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.3),
+        0 0 30px rgba(255, 215, 0, 0.1);
+    /* Animação consolidada: Entrada + Flutuação/Pulso Dourado */
+    animation:
+        card-entrance 1.2s var(--ease-elastic) forwards,
+        champion-idle 4s ease-in-out infinite 1.2s;
+    /* Garante que o overflow não corte os badges */
+    overflow: visible;
+}
+
+@keyframes champion-idle {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        box-shadow: 0 0 15px rgba(255, 215, 0, 0.3),
+            0 0 30px rgba(255, 215, 0, 0.1);
+    }
+
+    50% {
+        transform: translateY(-6px);
+        box-shadow: 0 0 25px rgba(255, 215, 0, 0.6),
+            0 0 40px rgba(255, 215, 0, 0.3);
+    }
+}
+
+/* Shimmer Effect */
+.shimmer-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+    background: linear-gradient(105deg,
+            transparent 20%,
+            rgba(255, 255, 255, 0.4) 25%,
+            transparent 30%);
+    z-index: 20;
+    pointer-events: none;
+    animation: shimmer-move 4s infinite linear;
+    background-size: 200% 100%;
+}
+
+@keyframes shimmer-move {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Premium Badge */
+.premium-badge {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 800;
+    font-size: 0.7rem;
+    padding: 6px 12px;
+    border-radius: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    z-index: 30;
+    border: 2px solid #fff;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    animation: badge-bounce 3s infinite;
+}
+
+@keyframes badge-bounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* Modal Countdown Banner */
+.countdown-banner {
+    background: linear-gradient(90deg, #d32f2f, #b71c1c);
+    color: #fff;
+    text-align: center;
+    padding: 8px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.9rem;
+    box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.timer-display {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: #ffeb3b;
+}
+
+/* Premium Benefits Grid */
+.premium-features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 25px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 215, 0, 0.1);
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    color: #eee;
+}
+
+.feature-icon {
+    font-size: 1.2rem;
+    width: 24px;
+    text-align: center;
+}
+
+/* Comparison Table */
+.comparison-section {
+    margin-bottom: 25px;
+}
+
+.comparison-title {
+    font-size: 0.9rem;
+    color: #ffc107;
+    margin-bottom: 10px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    color: #ccc;
+    border: 1px solid #333;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #333;
+}
+
+.comparison-table th {
+    background: #222;
+    color: #fff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.comparison-table .highlight-col {
+    background: rgba(255, 215, 0, 0.1);
+    color: #ffc107;
+    font-weight: 700;
+    border-left: 1px solid rgba(255, 215, 0, 0.2);
+    border-right: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+/* Testimonials */
+.testimonials-section {
+    margin-bottom: 20px;
+    text-align: center;
+    position: relative;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+}
+
+.testimonial {
+    font-style: italic;
+    color: #aaa;
+    font-size: 0.85rem;
+    line-height: 1.4;
+}
+
+.testimonial .author {
+    display: block;
+    margin-top: 8px;
+    font-style: normal;
+    font-weight: 700;
+    color: #ffc107;
+    font-size: 0.8rem;
+}
+
+/* Modal Headers */
+.champion-title-modal {
+    color: #ffc107;
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.champion-subtitle {
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+}
+
+/* Pulse Button */
+.pulse-btn {
+    animation: btn-pulse 2s infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+@keyframes btn-pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.4);
+    }
+
+    70% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 10px rgba(255, 193, 7, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 193, 7, 0);
+    }
+}
+
+/* Mobile Adjustments for Premium Elements */
+@media (max-width: 480px) {
+    .premium-benefits-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .countdown-banner {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+
+/* Comparison Modal Styles */
+.modal-comparison-content {
+    background-color: #1a1a1a;
+    border: 2px solid #444;
+    width: 90%;
+    max-width: 1000px;
+    padding: 20px;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.comparison-header-title {
+    text-align: center;
+    color: #fff;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-transform: uppercase;
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    /* Header + 4 Kits */
+    gap: 10px;
+    font-size: 0.9rem;
+}
+
+/* Adjusting for 5 columns: Row Header, Lord, Knight, Guardian, Champion */
+.comparison-grid {
+    grid-template-columns: 0.8fr 1fr 1fr 1fr 1fr;
+}
+
+.comp-col {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px 8px 0 0;
+}
+
+.col-lord {
+    background-color: #e67e22;
+}
+
+.col-knight {
+    background-color: #3498db;
+}
+
+.col-guardian {
+    background-color: #9b59b6;
+}
+
+.col-champion {
+    background-color: #f1c40f;
+    color: #000;
+}
+
+.comp-title {
+    margin: 0;
+    font-size: 1.2rem;
+    text-transform: uppercase;
+}
+
+.comp-price {
+    margin: 5px 0 0;
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+.comp-row-header {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    color: #aaa;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    padding-left: 10px;
+}
+
+.comp-cell {
+    background-color: #222;
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333;
+}
+
+.comp-cell.highlight {
+    background-color: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+    font-weight: bold;
+}
+
+/* Individual Modal Purchase Box */
+.purchase-box {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.price-container {
+    font-size: 2rem;
+    color: #fff;
+    margin-bottom: 5px;
+}
+
+.currency {
+    font-size: 1rem;
+    vertical-align: top;
+    color: #aaa;
+}
+
+.installment-text {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 15px;
+}
+
+.secondary-actions {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+    gap: 10px;
+}
+
+.btn-secondary {
+    flex: 1;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid #555;
+    color: #aaa;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    border-color: #fff;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Champion Gold Styles */
+.purchase-box-champion {
+    margin-top: 15px;
+    text-align: center;
+}
+
+.installment-text-gold {
+    display: block;
+    font-size: 0.8rem;
+    color: #aa8800;
+}
+
+/* VISIBILITY FIX FOR CHAMPION MODAL */
+.champion-modal .modal-highlight-box label {
+    color: #2c1810;
+    /* Dark brown for contrast on yellow */
+    font-weight: 800;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.champion-modal .modal-highlight-box .nick-feedback {
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}

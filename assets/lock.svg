@@ -1,0 +1,12 @@
+<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Lock body outline -->
+  <path d="M4 6 h8 v9 h-8 z" fill="#2d3436"/>
+  <!-- Shackle outline -->
+  <path d="M5 6 v-2 h1 v-1 h4 v1 h1 v2 h-1 v-2 h-4 v2 z" fill="#bdc3c7"/>
+  <!-- Lock body fill -->
+  <path d="M5 7 h6 v7 h-6 z" fill="#00b894"/>
+  <!-- Keyhole -->
+  <path d="M7 9 h2 v2 h-2 z M7.5 11 h1 v2 h-1 z" fill="#2d3436"/>
+  <!-- Highlight -->
+  <path d="M5 7 h1 v1 h-1 z" fill="#55efc4"/>
+</svg>

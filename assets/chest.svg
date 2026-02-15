@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" shape-rendering="crispEdges">
+  <!-- Outline -->
+  <path d="M2 5 h12 v9 h-12 z" fill="#3e2723"/>
+  <!-- Lid top -->
+  <path d="M3 4 h10 v2 h-10 z" fill="#5d4037"/>
+  <!-- Body -->
+  <path d="M3 7 h10 v6 h-10 z" fill="#8d6e63"/>
+  <!-- Metal bands -->
+  <path d="M3 5 h1 v8 h-1 z M12 5 h1 v8 h-1 z" fill="#fda7df"/> 
+  <!-- Lock -->
+  <path d="M7 8 h2 v2 h-2 z" fill="#ffd700"/>
+  <!-- Coins overflow -->
+  <path d="M4 6 h1 v1 h-1 z M6 5 h1 v1 h-1 z M9 6 h1 v1 h-1 z M11 5 h1 v1 h-1 z" fill="#ffd700"/>
+</svg>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=45">
+    <link rel="stylesheet" href="origin-style.css?v=3">
+    <link rel="stylesheet" href="test-style.css?v=1">
+    <title>Loja VIP - Teste</title>
+</head>
+
+<body>
+
+    <!-- Logo Panteão -->
+    <div class="pantheon-logo-container">
+        <img src="Kits/Panteao - Editado.png" alt="Panteão">
+    </div>
+
+    <!-- Container VIP LORD -->
+    <div class="vip-lord-container" id="vip-lord-trigger">
+        <div class="particles">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <img src="Loja4/KitsSitesNovos/ChapeuMagico - Editado.png" class="floating-item" alt="Chapéu Mágico">
+        <div class="vip-label">VIP LORD</div>
+    </div>
+
+    <!-- Container VIP KNIGHT -->
+    <div class="vip-knight-container" id="vip-knight-trigger">
+        <div class="particles particles-knight">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <img src="Loja4/KitsSitesNovos/ElmoKnight.png" class="floating-item" alt="VIP Knight">
+        <div class="vip-label">VIP KNIGHT</div>
+    </div>
+
+    <!-- Container VIP GUARDIAN -->
+    <div class="vip-guardian-container" id="vip-guardian-trigger">
+        <div class="particles particles-guardian">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <img src="Loja4/KitsSitesNovos/ElmoGuardian - Editado.png" class="floating-item" alt="VIP Guardian">
+        <div class="vip-label">VIP GUARDIAN</div>
+    </div>
+
+    <!-- Container VIP CHAMPION -->
+    <div class="vip-champion-container" id="vip-champion-trigger">
+        <div class="particles particles-champion">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <img src="Loja4/KitsSitesNovos/CoroaChampion.png" class="floating-item" alt="VIP Champion">
+        <div class="vip-label">VIP CHAMPION</div>
+    </div>
+
+    <!-- Modals -->
+    <!-- Modal Kit Lord -->
+    <div id="modal-kit-lord" class="modal-overlay" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-top-bar premium-header">
+                <div class="countdown-banner">
+                    <span class="offer-text">OFERTA ÉPICA TERMINA EM:</span>
+                    <div class="timer-display">04:59:59</div>
+                </div>
+                <button class="modal-close" data-modal="modal-kit-lord" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div class="modal-highlight-box">
+                <div class="avatar-preview">
+                    <img src="https://mc-heads.net/body/Steve/right" alt="Seu Personagem"
+                        class="avatar-3d-placeholder avatar-preview-img">
+                </div>
+
+                <div class="purchase-actions">
+                    <h2 class="kit-title-modal">VIP LORD</h2>
+                    <p class="kit-subtitle-modal">O início da sua jornada.</p>
+
+                    <form class="purchase-form">
+                        <div class="skin-selector">
+                            <label>Tipo de Skin:</label>
+                            <div class="skin-options">
+                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
+                                required autocomplete="off">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="help-text-section">
+                <h4 class="help-title">Qual é o meu nome de usuário?</h4>
+                <p class="help-desc">Seu nome de usuário é o nick que você usa para entrar no servidor. Certifique-se de
+                    digitar corretamente para receber seu VIP.</p>
+            </div>
+
+            <div class="checkout-section">
+                <div class="total-info">
+                    <span class="total-label">❓ Total Estimado</span>
+                    <span class="total-price">R$ 14,90</span>
+                </div>
+                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kit Knight -->
+    <div id="modal-kit-knight" class="modal-overlay" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-top-bar premium-header">
+                <div class="countdown-banner">
+                    <span class="offer-text">OFERTA ÉPICA TERMINA EM:</span>
+                    <div class="timer-display">04:59:59</div>
+                </div>
+                <button class="modal-close" data-modal="modal-kit-knight" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div class="modal-highlight-box">
+                <div class="avatar-preview">
+                    <img src="https://mc-heads.net/body/Steve/right" alt="Seu Personagem"
+                        class="avatar-3d-placeholder avatar-preview-img">
+                </div>
+
+                <div class="purchase-actions">
+                    <h2 class="kit-title-modal">VIP KNIGHT</h2>
+                    <p class="kit-subtitle-modal">Honra e força em combate.</p>
+
+                    <form class="purchase-form">
+                        <div class="skin-selector">
+                            <label>Tipo de Skin:</label>
+                            <div class="skin-options">
+                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
+                                required autocomplete="off">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="help-text-section">
+                <h4 class="help-title">Qual é o meu nome de usuário?</h4>
+                <p class="help-desc">Seu nome de usuário é o nick que você usa para entrar no servidor. Certifique-se de
+                    digitar corretamente para receber seu VIP.</p>
+            </div>
+
+            <div class="checkout-section">
+                <div class="total-info">
+                    <span class="total-label">❓ Total Estimado</span>
+                    <span class="total-price">R$ 24,90</span>
+                </div>
+                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kit Guardian -->
+    <div id="modal-kit-guardian" class="modal-overlay" aria-hidden="true">
+        <div class="modal-container">
+            <div class="modal-top-bar premium-header">
+                <div class="countdown-banner">
+                    <span class="offer-text">OFERTA ÉPICA TERMINA EM:</span>
+                    <div class="timer-display">04:59:59</div>
+                </div>
+                <button class="modal-close" data-modal="modal-kit-guardian" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div class="modal-highlight-box">
+                <div class="avatar-preview">
+                    <img src="https://mc-heads.net/body/Steve/right" alt="Seu Personagem"
+                        class="avatar-3d-placeholder avatar-preview-img">
+                </div>
+
+                <div class="purchase-actions">
+                    <h2 class="kit-title-modal">VIP GUARDIAN</h2>
+                    <p class="kit-subtitle-modal">Proteção e poder místico.</p>
+
+                    <form class="purchase-form">
+                        <div class="skin-selector">
+                            <label>Tipo de Skin:</label>
+                            <div class="skin-options">
+                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
+                                required autocomplete="off">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="help-text-section">
+                <h4 class="help-title">Qual é o meu nome de usuário?</h4>
+                <p class="help-desc">Seu nome de usuário é o nick que você usa para entrar no servidor. Certifique-se de
+                    digitar corretamente para receber seu VIP.</p>
+            </div>
+
+            <div class="checkout-section">
+                <div class="total-info">
+                    <span class="total-label">❓ Total Estimado</span>
+                    <span class="total-price">R$ 34,90</span>
+                </div>
+                <button type="button" class="origin-btn btn-buy checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Kit Champion -->
+    <div id="modal-kit-champion" class="modal-overlay" aria-hidden="true">
+        <div class="modal-container champion-modal">
+            <div class="modal-top-bar premium-header">
+                <div class="countdown-banner">
+                    <span class="offer-text">OFERTA ÉPICA TERMINA EM:</span>
+                    <div class="timer-display">04:59:59</div>
+                </div>
+                <button class="modal-close" data-modal="modal-kit-champion" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div class="modal-highlight-box premium-box">
+                <div class="avatar-preview">
+                    <img src="https://mc-heads.net/body/Steve/right" alt="Seu Personagem"
+                        class="avatar-3d-placeholder avatar-preview-img">
+                </div>
+
+                <div class="purchase-actions">
+                    <h2 class="kit-title-modal">VIP CHAMPION</h2>
+                    <p class="kit-subtitle-modal">A escolha dos verdadeiros lendas.</p>
+
+                    <form class="purchase-form">
+                        <div class="skin-selector">
+                            <label>Tipo de Skin:</label>
+                            <div class="skin-options">
+                                <button type="button" class="skin-opt active" data-type="nick">Nick</button>
+                            </div>
+                        </div>
+                        <div>
+                            <input type="text" class="origin-input nickname-input" placeholder="Digite seu nick..."
+                                required autocomplete="off">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="help-text-section">
+                <h4 class="help-title">Qual é o meu nome de usuário?</h4>
+                <p class="help-desc">Seu nome de usuário é o nick que você usa para entrar no servidor. Certifique-se de
+                    digitar corretamente para receber seu VIP.</p>
+            </div>
+
+            <div class="checkout-section">
+                <div class="total-info">
+                    <span class="total-label">❓ Total Estimado</span>
+                    <span class="total-price">R$ 49,90</span>
+                </div>
+                <button type="button" class="origin-btn pulse-btn checkout-btn" disabled>ADQUIRIR AGORA ➜</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const kits = [
+                { id: 'lord', name: 'VIP LORD' },
+                { id: 'knight', name: 'VIP KNIGHT' },
+                { id: 'guardian', name: 'VIP GUARDIAN' },
+                { id: 'champion', name: 'VIP CHAMPION' }
+            ];
+
+            kits.forEach(kit => {
+                const trigger = document.getElementById(`vip-${kit.id}-trigger`);
+                const modal = document.getElementById(`modal-kit-${kit.id}`);
+
+                if (trigger && modal) {
+                    const closeBtn = modal.querySelector('.modal-close');
+                    const nicknameInput = modal.querySelector('.nickname-input');
+                    const buyButton = modal.querySelector('.btn-buy');
+                    const avatarImg = modal.querySelector('.avatar-preview-img');
+
+                    // Função de Fechar Modal
+                    const closeModal = () => {
+                        modal.classList.remove('active');
+                        modal.setAttribute('aria-hidden', 'true');
+                        modal.style.visibility = '';
+                        modal.style.opacity = '';
+                        modal.style.display = '';
+                    };
+
+                    // Abrir Modal
+                    trigger.onclick = function () {
+                        modal.classList.add('active');
+                        modal.setAttribute('aria-hidden', 'false');
+                        modal.style.visibility = 'visible';
+                        modal.style.opacity = '1';
+                        modal.style.display = 'flex';
+                    };
+
+                    // Fechar Modal
+                    if (closeBtn) closeBtn.onclick = closeModal;
+
+                    // Fechar ao clicar fora
+                    window.addEventListener('click', (e) => {
+                        if (e.target === modal) closeModal();
+                    });
+
+                    // Lógica de Validação e Compra
+                    if (nicknameInput && buyButton) {
+                        let typingTimer;
+
+                        // Atualizar Avatar
+                        const updateAvatar = (username) => {
+                            if (avatarImg) {
+                                avatarImg.src = `https://mc-heads.net/body/${username}/right`;
+                            }
+                        };
+
+                        // Validar Input
+                        const validateInput = () => {
+                            const nickname = nicknameInput.value.trim();
+                            if (nickname.length > 2) {
+                                buyButton.disabled = false;
+                                updateAvatar(nickname);
+                            } else {
+                                buyButton.disabled = true;
+                            }
+                        };
+
+                        nicknameInput.addEventListener('input', () => {
+                            clearTimeout(typingTimer);
+                            typingTimer = setTimeout(validateInput, 500);
+                        });
+
+                        // Botão Comprar
+                        buyButton.onclick = () => {
+                            if (buyButton.disabled) return;
+
+                            const nickname = nicknameInput.value.trim();
+                            const originalText = buyButton.textContent;
+
+                            buyButton.textContent = 'PROCESSANDO...';
+                            buyButton.disabled = true;
+
+                            setTimeout(() => {
+                                alert(`Redirecionando para pagamento do ${kit.name} para: ${nickname}`);
+                                buyButton.textContent = originalText;
+                                buyButton.disabled = false;
+                                closeModal();
+                            }, 1500);
+                        };
+                    }
+                } else {
+                    console.warn(`Kit ${kit.id}: Trigger ou Modal não encontrado.`);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

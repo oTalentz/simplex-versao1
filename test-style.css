@@ -1,0 +1,316 @@
+body {
+    margin: 0;
+    padding: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('Loja4/KitsSitesNovos/PanteaoBackground.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+    background: transparent;
+    padding: 2rem;
+    border-radius: 10px;
+    pointer-events: none;
+    /* Permitir clicar através do container */
+}
+
+/* Container para os itens flutuantes */
+.items-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    /* Permite clicar no fundo se necessário */
+    overflow: hidden;
+}
+
+/* Logo Panteão */
+.pantheon-logo-container {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    width: 25%;
+    min-width: 200px;
+    max-width: 400px;
+    pointer-events: none;
+    animation: float-logo 4s ease-in-out infinite;
+}
+
+.pantheon-logo-container img {
+    width: 100%;
+    height: auto;
+    image-rendering: pixelated;
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6));
+}
+
+@keyframes float-logo {
+
+    0%,
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+
+    50% {
+        transform: translateX(-50%) translateY(-10px);
+    }
+}
+
+/* Classe base para itens flutuantes */
+.floating-item {
+    position: absolute;
+    z-index: 10;
+    filter: drop-shadow(0 0 15px rgba(138, 43, 226, 0.6));
+    /* Brilho roxo inicial */
+    animation: float 3s ease-in-out infinite;
+    width: 8%;
+    /* Tamanho muito reduzido */
+    min-width: 80px;
+    max-width: 150px;
+    image-rendering: pixelated;
+    /* Manter estilo pixel art */
+    transition: scale 0.2s ease;
+}
+
+/* Container Principal do Item VIP LORD */
+.vip-lord-container {
+    position: absolute;
+    bottom: 35%;
+    left: 14%;
+    width: 8%;
+    min-width: 80px;
+    max-width: 150px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.vip-lord-container .floating-item {
+    position: relative;
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    margin-bottom: 5px;
+}
+
+/* Container Principal do Item VIP KNIGHT */
+.vip-knight-container {
+    position: absolute;
+    bottom: 35%;
+    left: 36%;
+    width: 4.5%;
+    min-width: 45px;
+    max-width: 75px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.vip-knight-container .floating-item {
+    position: relative;
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    margin-bottom: 5px;
+}
+
+/* Container Principal do Item VIP GUARDIAN */
+.vip-guardian-container {
+    position: absolute;
+    bottom: 35%;
+    left: 54%;
+    width: 6%;
+    min-width: 60px;
+    max-width: 100px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.vip-guardian-container .floating-item {
+    position: relative;
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    margin-bottom: 5px;
+}
+
+/* Container Principal do Item VIP CHAMPION */
+.vip-champion-container {
+    position: absolute;
+    bottom: 35%;
+    left: 74%;
+    width: 8%;
+    min-width: 80px;
+    max-width: 150px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.vip-champion-container .floating-item {
+    position: relative;
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    margin-bottom: 5px;
+}
+
+/* Label VIP - Estilo Placa no Pedestal */
+.vip-label {
+    font-family: 'Press Start 2P', cursive;
+    color: #ffdead;
+    background-color: #2e1a12;
+    border: 2px solid #5c3a21;
+    padding: 7px 10px;
+    border-radius: 4px;
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+    margin-top: 45px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 11;
+}
+
+/* Partículas Mágicas */
+.particles {
+    position: absolute;
+    top: -20%;
+    left: -20%;
+    width: 140%;
+    height: 140%;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.particles span {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: #bd00ff;
+    box-shadow: 0 0 5px #bd00ff;
+    border-radius: 0;
+    opacity: 0;
+    animation: particle-anim 3s infinite linear;
+}
+
+/* Cores das Partículas por Rank */
+.particles-knight span {
+    background: #00bfff;
+    box-shadow: 0 0 5px #00bfff;
+    border-radius: 50%;
+}
+
+.particles-guardian span {
+    background: #8a2be2;
+    box-shadow: 0 0 5px #8a2be2;
+}
+
+.particles-champion span {
+    background: #ffd700;
+    box-shadow: 0 0 5px #ffd700;
+}
+
+/* Distribuição aleatória das partículas */
+.particles span:nth-child(1) {
+    left: 20%;
+    top: 60%;
+    animation-delay: 0s;
+}
+
+.particles span:nth-child(2) {
+    left: 80%;
+    top: 50%;
+    animation-delay: 0.5s;
+}
+
+.particles span:nth-child(3) {
+    left: 40%;
+    top: 80%;
+    animation-delay: 1s;
+}
+
+.particles span:nth-child(4) {
+    left: 70%;
+    top: 30%;
+    animation-delay: 1.5s;
+}
+
+.particles span:nth-child(5) {
+    left: 30%;
+    top: 40%;
+    animation-delay: 0.2s;
+}
+
+@keyframes particle-anim {
+    0% {
+        transform: translateY(0) scale(0);
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+        transform: translateY(-20px) scale(1);
+    }
+
+    100% {
+        transform: translateY(-50px) scale(0);
+        opacity: 0;
+    }
+}
+
+@keyframes float-text {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0);
+        filter: drop-shadow(0 5px 15px rgba(138, 43, 226, 0.5));
+    }
+
+    50% {
+        transform: translateY(-20px);
+        filter: drop-shadow(0 25px 20px rgba(138, 43, 226, 0.3));
+    }
+}

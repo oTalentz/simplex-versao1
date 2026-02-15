@@ -1,0 +1,470 @@
+/* --- ORIGIN REALMS INSPIRED DESIGN --- */
+
+.modal-top-bar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 20px;
+    background: transparent;
+}
+
+.modal-top-bar.premium-header {
+    justify-content: space-between;
+}
+
+/* Updated Highlight Box */
+.modal-highlight-box {
+    background: #ffc107;
+    border-radius: 12px;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    margin-bottom: 20px;
+    /* Force dark text for visibility on yellow background */
+    color: #1a1a1a;
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* Ensure headings and common text elements are dark inside highlight box */
+.modal-highlight-box h2,
+.modal-highlight-box h3,
+.modal-highlight-box h4,
+.modal-highlight-box p,
+.modal-highlight-box label,
+.modal-highlight-box span {
+    color: #1a1a1a;
+    text-shadow: none;
+    font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+}
+
+/* Specific overrides for kit modal classes inside highlight box */
+.modal-highlight-box .kit-title-modal {
+    color: #000;
+    text-shadow: none;
+    font-weight: 800;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+}
+
+.modal-highlight-box .kit-subtitle-modal {
+    color: #333;
+    font-weight: 500;
+    font-size: 1rem;
+    font-style: italic;
+    opacity: 0.9;
+    margin-bottom: 20px;
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+}
+
+.modal-highlight-box .installment-text,
+.modal-highlight-box .installment-text-gold {
+    color: #444;
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.modal-highlight-box .skin-opt.active {
+    color: #000;
+    background: #fff;
+    border-color: #000;
+    font-weight: bold;
+}
+
+/* Avatar Adjustment */
+.avatar-preview {
+    flex-shrink: 0;
+    width: 100px;
+    /* Larger avatar area */
+    display: flex;
+    justify-content: center;
+}
+
+.avatar-3d-placeholder {
+    height: 120px;
+    /* Larger avatar */
+    filter: drop-shadow(0 5px 15px rgba(0, 0, 0, 0.3));
+}
+
+/* Form Container */
+.purchase-actions {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.purchase-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 100%;
+}
+
+/* Hide Skin Selector as requested */
+.skin-selector {
+    display: none;
+}
+
+/* Origin Input Style */
+.origin-input {
+    width: 100%;
+    background: #1a1a1a;
+    border: none;
+    border-radius: 6px;
+    padding: 16px;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 600;
+    font-family: 'Segoe UI', sans-serif;
+    outline: none;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
+    transition: background 0.2s;
+}
+
+.origin-input:focus {
+    background: #252525;
+}
+
+.origin-input::placeholder {
+    color: #555;
+}
+
+/* Origin Button Style - Mechanical Key Edition */
+.origin-btn {
+    width: 100%;
+    /* Gradient for key cap - slightly lighter top for plastic feel */
+    background: linear-gradient(to bottom, #f39c12, #d35400);
+    color: #fff;
+    /* Thick white border mimics the key housing/gap */
+    border: 3px solid rgba(255, 255, 255, 0.9);
+    border-radius: 12px;
+    padding: 18px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 1px;
+
+    /* 3D Key Structure */
+    /* 1. Inset highlight (top edge) */
+    /* 2. Deep side shadow (the switch/stem height) */
+    /* 3. Soft ambient shadow */
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        0 8px 0 #a04000,
+        0 15px 20px rgba(0, 0, 0, 0.3);
+
+    transition: all 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    text-shadow: 0 2px 0 rgba(0, 0, 0, 0.2);
+}
+
+.origin-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Glossy shine on top half */
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
+    opacity: 0.8;
+    pointer-events: none;
+}
+
+/* Hover: Key lifts slightly (or gets ready to press) */
+.origin-btn:hover:not(:disabled) {
+    background: linear-gradient(to bottom, #f1c40f, #e67e22);
+    transform: translateY(-2px);
+    box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        0 10px 0 #a04000,
+        0 20px 25px rgba(0, 0, 0, 0.4);
+    animation: none;
+    /* Stop pulse on hover */
+}
+
+/* Active: Key Pressed Down */
+.origin-btn:active:not(:disabled) {
+    transform: translateY(8px);
+    /* Moves down to cover the shadow */
+    box-shadow:
+        inset 0 4px 10px rgba(0, 0, 0, 0.2),
+        /* Inner shadow shows concavity */
+        0 0 0 #a04000,
+        /* Side shadow disappears */
+        0 0 0 rgba(0, 0, 0, 0);
+    /* Drop shadow disappears */
+    border-color: rgba(255, 255, 255, 0.6);
+    animation: none;
+}
+
+.origin-btn:disabled {
+    background: #bdc3c7;
+    color: #7f8c8d;
+    box-shadow: 0 4px 0 #95a5a6;
+    cursor: not-allowed;
+    border-color: #95a5a6;
+    opacity: 0.8;
+    transform: none;
+}
+
+/* Help Text Section */
+.help-text-section {
+    padding: 10px 20px 20px;
+    text-align: left;
+}
+
+.help-title {
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.help-desc {
+    color: #aaa;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+/* Checkout Section - New Addition */
+.checkout-section {
+    background: #0d0d0d;
+    border-top: 1px solid #333;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 5;
+}
+
+.total-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.total-label {
+    color: #888;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    letter-spacing: 0.5px;
+}
+
+.total-price {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 900;
+    font-family: 'Rubik', 'Segoe UI', sans-serif;
+    letter-spacing: -1px;
+    line-height: 1;
+}
+
+.checkout-btn {
+    width: auto;
+    min-width: 220px;
+    padding: 15px 30px;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+/* Comparison Table Styles */
+.comparison-section-container {
+    background: #000;
+    padding: 20px;
+    border-top: 1px solid #333;
+    overflow-x: auto;
+    /* Allow horizontal scroll on small screens */
+}
+
+.comparison-grid {
+    display: grid;
+    grid-template-columns: 100px repeat(4, 1fr);
+    gap: 1px;
+    background: #333;
+    /* Grid lines color */
+    border: 1px solid #333;
+    border-radius: 4px;
+    overflow: hidden;
+    min-width: 500px;
+    /* Ensure readability */
+}
+
+/* Headers */
+.grid-header {
+    padding: 15px 5px;
+    text-align: center;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+}
+
+.header-lord {
+    background: #e67e22;
+}
+
+/* Orange */
+.header-knight {
+    background: #3498db;
+}
+
+/* Blue */
+.header-guardian {
+    background: #9b59b6;
+}
+
+/* Purple */
+.header-champion {
+    background: linear-gradient(135deg, #ffd700, #ffaa00);
+    color: #000;
+}
+
+/* Gold */
+
+/* Empty top-left cell hack */
+.comparison-grid::before {
+    content: "VIPs";
+    background: #222;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8rem;
+    font-family: 'Rubik', sans-serif;
+}
+
+.header-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.6rem;
+    line-height: 1.5;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.3);
+}
+
+.header-price {
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    font-size: 0.8rem;
+    opacity: 0.9;
+}
+
+.header-champion .header-title {
+    color: #000;
+    text-shadow: none;
+}
+
+/* Section Titles */
+.grid-section-title {
+    grid-column: 1 / -1;
+    background: #1a1a1a;
+    color: #fff;
+    padding: 10px 15px;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-bottom: 1px solid #333;
+}
+
+/* Rows */
+.grid-row {
+    display: contents;
+    /* Allows children to be part of the main grid */
+}
+
+.grid-label {
+    background: #111;
+    color: #aaa;
+    padding: 12px 10px;
+    font-family: 'Segoe UI', sans-serif;
+    font-weight: 600;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+}
+
+.grid-cell {
+    background: #151515;
+    color: #fff;
+    padding: 12px 5px;
+    text-align: center;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.grid-cell:hover {
+    background: #222;
+}
+
+/* Validation Feedback Adjustment */
+.nick-feedback {
+    font-weight: 700;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+    .modal-highlight-box {
+        flex-direction: column;
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .avatar-preview {
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .origin-input,
+    .origin-btn {
+        padding: 14px;
+    }
+
+    .checkout-section {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .total-info {
+        align-items: center;
+    }
+
+    .checkout-btn {
+        width: 100%;
+    }
+}
