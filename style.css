@@ -1724,3 +1724,19 @@ body::after {
     color: #e74c3c;
     opacity: 0.3;
 }
+
+/* Informação da Temporada no Panteão */
+.server-season-info {
+    font-family: 'Press Start 2P', cursive;
+    color: #5c3c22;
+    /* Tom marrom escuro que combina com o pergaminho */
+    font-size: 0.5rem;
+    text-align: center;
+    line-height: 1.6;
+    margin-top: 20px;
+    width: 90%;
+    opacity: 0.8;
+    text-transform: uppercase;
+    text-shadow: 1px 1px 0px rgba(255, 255, 255, 0.3);
+    /* Leve brilho para contraste */
+}

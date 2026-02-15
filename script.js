@@ -61,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupModal('kit-guardian-card', 'modal-kit-guardian');
     setupModal('kit-champion-card', 'modal-kit-champion');
 
+    // Terms Modal
+    setupModal('btn-terms-trigger', 'modal-terms');
+
     // Close on ESC
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -431,5 +434,17 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateAvatar(imgElement, username) {
         imgElement.src = `https://mc-heads.net/body/${username}/right`;
     }
+
+    // Terms Link Action (in purchase modals)
+    document.querySelectorAll('.terms-link-action').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const termsModal = document.getElementById('modal-terms');
+            if (termsModal) {
+                termsModal.classList.add('active');
+                termsModal.setAttribute('aria-hidden', 'false');
+            }
+        });
+    });
 
 });

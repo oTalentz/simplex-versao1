@@ -1,0 +1,156 @@
+
+/* --- Termos e Uso --- */
+
+/* Botão Flutuante */
+.terms-trigger-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 35px;
+    z-index: 100; /* Acima das bordas ornamentais */
+    background: linear-gradient(180deg, #3d2a1f 0%, #2c1810 100%);
+    color: #e0c097;
+    border: 2px solid #8b6c42;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 0.5rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+}
+
+.terms-trigger-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(180deg, #4a3425 0%, #3d2a1f 100%);
+    color: #fff;
+    border-color: #c2a468;
+}
+
+.terms-trigger-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal de Termos */
+.terms-modal {
+    max-width: 800px; /* Mais largo que os outros modais */
+    width: 90%;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-title-terms {
+    color: #ffc107;
+    text-shadow: 2px 2px 0 #000;
+    font-size: 1.2rem;
+    margin: 0;
+}
+
+.terms-box {
+    background-color: rgba(20, 20, 20, 0.95);
+    border: 1px solid #444;
+    padding: 20px;
+    border-radius: 8px;
+    flex: 1;
+    overflow: hidden; /* Para o scroll ser interno */
+    display: flex;
+    flex-direction: column;
+}
+
+.terms-content {
+    overflow-y: auto;
+    padding-right: 10px;
+    font-family: 'Rubik', sans-serif; /* Fonte mais legível para texto longo */
+    color: #ddd;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    text-align: left;
+}
+
+/* Scrollbar personalizada para o modal de termos */
+.terms-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.terms-content::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 4px;
+}
+
+.terms-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.terms-content::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}
+
+.terms-content h3 {
+    color: #c2a468;
+    font-family: 'Cinzel', serif;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #444;
+    padding-bottom: 5px;
+    font-size: 1.2rem;
+}
+
+.terms-content h3:first-child {
+    margin-top: 0;
+}
+
+.terms-content h4 {
+    color: #ffc107;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 700;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-size: 1rem;
+}
+
+.terms-content p {
+    margin-bottom: 10px;
+}
+
+.terms-content ul {
+    margin-left: 20px;
+    margin-bottom: 15px;
+}
+
+.terms-content li {
+    margin-bottom: 5px;
+}
+
+.terms-divider {
+    border: 0;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #444, transparent);
+    margin: 30px 0;
+}
+
+.terms-link {
+    color: #4da6ff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.terms-link:hover {
+    color: #80c1ff;
+    text-decoration: underline;
+}
+
+.terms-footer {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #888;
+    border-top: 1px solid #333;
+    padding-top: 20px;
+}

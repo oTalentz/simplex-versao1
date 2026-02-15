@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="style.css?v=45">
     <link rel="stylesheet" href="origin-style.css?v=3">
     <link rel="stylesheet" href="payment-selector.css">
+    <link rel="stylesheet" href="terms-style.css">
     <meta name="description"
         content="Simplex Network - O melhor servidor de Minecraft com economia balanceada, terrenos, kits exclusivos e muito mais. Adquira seu VIP agora!">
     <meta name="keywords" content="Minecraft, Server, VIP, Simplex Network, Jogos, Multiplayer">
@@ -100,6 +101,11 @@
                             <div class="kit-price-subtle">R$ 129,90</div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Informação da Temporada -->
+                <div class="server-season-info">
+                    Vips referentes ao servidor:<br>Survival Legends (Temporada 1)
                 </div>
             </div>
         </div>
@@ -237,6 +243,10 @@
                 </div>
                 <div class="payment-selector-container"></div>
                 <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+                <div class="terms-disclaimer">
+                    Ao adquirir este produto, você concorda com os nossos <a href="#" class="terms-link-action">Termos
+                        de Uso</a>.
+                </div>
             </div>
         </div>
     </div>
@@ -371,6 +381,10 @@
                 </div>
                 <div class="payment-selector-container"></div>
                 <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+                <div class="terms-disclaimer">
+                    Ao adquirir este produto, você concorda com os nossos <a href="#" class="terms-link-action">Termos
+                        de Uso</a>.
+                </div>
             </div>
         </div>
     </div>
@@ -505,6 +519,10 @@
                 </div>
                 <div class="payment-selector-container"></div>
                 <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+                <div class="terms-disclaimer">
+                    Ao adquirir este produto, você concorda com os nossos <a href="#" class="terms-link-action">Termos
+                        de Uso</a>.
+                </div>
             </div>
         </div>
     </div>
@@ -642,11 +660,146 @@
                 </div>
                 <div class="payment-selector-container"></div>
                 <button class="btn-buy-footer" disabled>ADQUIRIR AGORA</button>
+                <div class="terms-disclaimer">
+                    Ao adquirir este produto, você concorda com os nossos <a href="#" class="terms-link-action">Termos
+                        de Uso</a>.
+                </div>
             </div>
         </div>
     </div>
 
     <script src="payment-selector.js"></script>
+    <!-- Modal Termos de Uso -->
+    <div id="modal-terms" class="modal-overlay" aria-hidden="true">
+        <div class="modal-container terms-modal">
+            <div class="modal-top-bar premium-header">
+                <h2 class="modal-title-terms">TERMOS DE USO</h2>
+                <button class="modal-close" data-modal="modal-terms" aria-label="Fechar">&times;</button>
+            </div>
+
+            <div class="modal-highlight-box terms-box">
+                <div class="terms-content">
+                    <h3>TERMOS DE PAGAMENTO E USO</h3>
+                    <p>Ao prosseguir com a compra e concordar com estes termos, você está afirmando que:</p>
+
+                    <h4>1. Idade e Permissão</h4>
+                    <p>Você tem pelo menos 18 anos de idade OU possui a permissão expressa de seus pais ou responsável
+                        legal para realizar esta compra.</p>
+
+                    <h4>2. Autorização de Pagamento</h4>
+                    <p>Você tem autorização para usar o método de pagamento selecionado (cartão de débito/crédito, conta
+                        Mercado Pago, PayPal, PIX, etc.).</p>
+
+                    <h4>3. Política de Não Reversão</h4>
+                    <p>Você se compromete a não solicitar estorno, contestar ou reverter qualquer pagamento realizado
+                        sem uma aprovação prévia da nossa equipe administrativa. A violação desta cláusula resultará em
+                        banimento permanente de nossas plataformas.</p>
+
+                    <h4>4. Uso Apropriado</h4>
+                    <p>Você não abusará dos benefícios, permissões ou itens adquiridos em nossa loja.</p>
+
+                    <h4>5. Direito de Banimento</h4>
+                    <p>Reservamo-nos o direito de banir permanentemente qualquer conta de nossos serviços, com ou sem
+                        aviso prévio, por qualquer motivo que julguemos necessário, incluindo, mas não se limitando a,
+                        violação de nossas regras.</p>
+
+                    <h4>6. Segurança da Conta</h4>
+                    <p>A proteção das informações de login de sua conta (usuário e senha) é de sua inteira
+                        responsabilidade. Em caso de comprometimento da conta (roubo, perda de acesso), o Simplex
+                        Network (Eco Group) não garante a transferência de compras ou o reembolso de valores.</p>
+
+                    <h4>7. Concordância Plena</h4>
+                    <p>Você concorda com todos os termos listados acima e abaixo.</p>
+
+                    <hr class="terms-divider">
+
+                    <h3>DETALHES DO SERVIÇO E PRODUTOS</h3>
+
+                    <h4>Definição de "Vida Útil"</h4>
+                    <p>O termo "vida útil" refere-se à duração do produto enquanto o servidor Simplex Network (Eco
+                        Group) estiver online e operacional. Se, por qualquer motivo, o servidor encerrar suas
+                        atividades, o Simplex Network (Eco Group) não terá a obrigação de continuar fornecendo os
+                        serviços, e o usuário concorda que todos os serviços foram entregues de forma satisfatória.</p>
+
+                    <h4>Alterações de Preços e Itens</h4>
+                    <p>Reservamo-nos o direito de alterar, com ou sem aviso prévio, os preços e o conteúdo de qualquer
+                        item da loja. Os benefícios de um VIP ou produto podem ser modificados por razões de
+                        balanceamento ou outras necessidades do servidor, e você não terá direito a benefícios antigos
+                        caso ocorra uma alteração.</p>
+
+                    <h4>Encerramento do Servidor</h4>
+                    <p>Você concorda que, ao adquirir produtos no Simplex Network (Eco Group), em caso de eventual
+                        encerramento das atividades do servidor (parcial ou total), os produtos adquiridos e já
+                        usufruídos são considerados como "venda a coisa esperada", conforme instituto equiparado pelo
+                        Código Civil, não cabendo reembolso.</p>
+
+                    <h4>Indenização</h4>
+                    <p>Você concorda em isentar e indenizar a equipe, proprietários, administradores, parceiros e todas
+                        as outras partes relacionadas ao Simplex Network (Eco Group) de qualquer responsabilidade. Ao
+                        aceitar estes termos, você renuncia ao direito de apresentar qualquer ação judicial ou desafio
+                        legal contra a equipe do servidor por qualquer motivo.</p>
+
+                    <h4>Isenção de Garantias</h4>
+                    <p>Você entende e concorda que o uso deste site e de qualquer serviço ou conteúdo é fornecido "como
+                        está" e por sua conta e risco. Renunciamos expressamente a todas as garantias, implícitas ou
+                        explícitas, incluindo, mas não se limitando a, garantias de comercialização ou adequação a um
+                        propósito específico.</p>
+
+                    <h4>Limitação de Responsabilidade</h4>
+                    <p>Você entende e concorda expressamente que não seremos responsáveis por quaisquer danos diretos,
+                        indiretos, especiais, incidentais ou consequentes resultantes do uso ou da incapacidade de usar
+                        nossos serviços.</p>
+
+                    <h4>Política de Reembolso</h4>
+                    <p>Todas as vendas são finais. Há reembolsos apenas nos primeiros 7 dias de compra. A compra de
+                        unban, por ter caráter extraordinário, não é reembolsável após a aquisição. Se você for banido
+                        por violar as regras do Simplex Network (Eco Group), também não será reembolsado. A tentativa de
+                        estorno ou chargeback resultará em banimento imediato e permanente de todas as nossas
+                        plataformas. Todos os itens adquiridos são virtuais e não possuem valor monetário real.</p>
+
+                    <hr class="terms-divider">
+
+                    <h3>AVISOS IMPORTANTES</h3>
+                    <h4>Vínculo com a Mojang</h4>
+                    <p>O Simplex Network (Eco Group) não possui qualquer vínculo com a Mojang, a Microsoft ou o
+                        Minecraft. Somos um servidor independente.</p>
+
+                    <h4>Nickname Correto</h4>
+                    <p>Ao adquirir um produto em nossa loja, certifique-se de que está usando o nickname (nome de
+                        usuário no jogo) exatamente como ele é. Erros de digitação são de sua responsabilidade e podem
+                        resultar na não entrega do produto.</p>
+
+                    <hr class="terms-divider">
+
+                    <h3>PRAZO DE ENTREGA DO PRODUTO</h3>
+                    <p>Fique atento aos prazos de aprovação de sua compra, que variam conforme o método de pagamento:
+                    </p>
+                    <ul>
+                        <li><strong>PIX, Cartão de Crédito ou Saldo na Loja:</strong> A aprovação é automática. Basta
+                            entrar no servidor para que o produto seja ativado.</li>
+                        <li><strong>Boleto Bancário ou Depósito:</strong> A aprovação pode levar até 3 dias úteis após a
+                            data do pagamento.</li>
+                    </ul>
+
+                    <hr class="terms-divider">
+
+                    <h3>SAC E ATENDIMENTO</h3>
+                    <p>Para qualquer dúvida sobre sua transação, entre em contato através do discord ou do e-mail:</p>
+                    <p><strong>Discord:</strong> <a href="https://discord.gg/hGB9aVYVzt" class="terms-link"
+                            target="_blank" rel="noopener noreferrer">Acesse nosso Discord</a></p>
+                    <p><strong>E-mail:</strong> contato@simplexnetwork.com</p>
+
+                    <p class="terms-footer">© Simplex Network (Eco Group), 2026</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botão Flutuante de Termos -->
+    <button id="btn-terms-trigger" class="terms-trigger-btn">
+        <i class="fa-solid fa-file-contract"></i> Termos e Uso
+    </button>
+
     <script src="script.js"></script>
     <script src="tests.js"></script>
 </body>
