@@ -1,16 +1,20 @@
 {
-    "outputDirectory": ".",
-    "functions": {
-      "api/index.py": {
-        "maxDuration": 60
-      }
-    },
-    "redirects": [
-      { "source": "/painel", "destination": "/painel/", "permanent": true }
+    "version": 2,
+    "builds": [
+        {
+            "src": "api/index.py",
+            "use": "@vercel/python"
+        },
+        {
+            "src": "package.json",
+            "use": "@vercel/static-build",
+            "config": { "distDir": "." }
+        }
     ],
-    "rewrites": [
-      { "source": "/api", "destination": "/api/index.py" },
-      { "source": "/api/(.*)", "destination": "/api/index.py" },
-      { "source": "/painel/", "destination": "/painel/index.html" }
+    "routes": [
+        { "src": "/api/(.*)", "dest": "/api/index.py" },
+        { "src": "/painel", "status": 308, "headers": { "Location": "/painel/" } },
+        { "src": "/painel/", "dest": "/painel/index.html" },
+        { "src": "/(.*)", "dest": "/$1" }
     ]
 }
