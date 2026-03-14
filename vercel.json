@@ -1,9 +1,9 @@
 {
-    "outputDirectory": ".",
     "redirects": [
       { "source": "/painel", "destination": "/painel/", "permanent": true }
     ],
     "rewrites": [
+      { "source": "/api", "destination": "/api/index.py" },
       { "source": "/api/(.*)", "destination": "/api/index.py" },
       { "source": "/painel/", "destination": "/painel/index.html" }
     ]
