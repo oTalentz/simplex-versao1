@@ -37,6 +37,18 @@ class TestSecurityAndAdmin(unittest.TestCase):
         body = response.get_json()
         self.assertEqual(body["username"], "admin")
 
+    def test_api_prefixed_auth_routes(self):
+        login_response = self.client.post(
+            "/api/auth/login",
+            data=json.dumps({"username": "admin", "password": "admin123"}),
+            content_type="application/json"
+        )
+        self.assertEqual(login_response.status_code, 200)
+        token = login_response.get_json()["token"]
+        me_response = self.client.get("/api/auth/me", headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(me_response.status_code, 200)
+        self.assertEqual(me_response.get_json()["username"], "admin")
+
     def test_admin_stats_authenticated(self):
         response = self.client.get("/admin/stats?days=30", headers=self._auth_headers())
         self.assertEqual(response.status_code, 200)

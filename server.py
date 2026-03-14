@@ -640,6 +640,29 @@ def swagger_json():
         return jsonify(json.load(file))
 
 
+def register_api_aliases():
+    existing_rules = {rule.rule for rule in app.url_map.iter_rules()}
+    for rule in list(app.url_map.iter_rules()):
+        if rule.endpoint == "static":
+            continue
+        if rule.rule.startswith("/api"):
+            continue
+        alias = "/api" if rule.rule == "/" else f"/api{rule.rule}"
+        if alias in existing_rules:
+            continue
+        methods = [method for method in rule.methods if method not in {"HEAD", "OPTIONS"}]
+        app.add_url_rule(
+            alias,
+            endpoint=f"api_alias_{rule.endpoint}_{len(existing_rules)}",
+            view_func=app.view_functions[rule.endpoint],
+            methods=methods
+        )
+        existing_rules.add(alias)
+
+
+register_api_aliases()
+
+
 if __name__ == '__main__':
     logger.info("Starting Payment Server on port 5000...")
     app.run(port=5000, debug=True)
