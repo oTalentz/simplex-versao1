@@ -28,3 +28,5 @@ env/
 # Project specific
 style.css.bak
 last_response.json
+simplex.db
+connector_cache.json

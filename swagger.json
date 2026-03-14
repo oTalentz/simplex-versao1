@@ -1,0 +1,132 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Simplex Admin API",
+    "version": "1.0.0",
+    "description": "API RESTful para pagamentos, autenticação e administração."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "LoginRequest": {
+        "type": "object",
+        "required": ["username", "password"],
+        "properties": {
+          "username": { "type": "string" },
+          "password": { "type": "string" }
+        }
+      },
+      "CreatePaymentRequest": {
+        "type": "object",
+        "required": ["nickname", "email", "cpf", "product"],
+        "properties": {
+          "nickname": { "type": "string" },
+          "email": { "type": "string" },
+          "cpf": { "type": "string" },
+          "cellphone": { "type": "string" },
+          "product": { "type": "string", "enum": ["LORD", "KNIGHT", "GUARDIAN", "CHAMPION"] }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/auth/login": {
+      "post": {
+        "summary": "Autentica administrador",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Sucesso" },
+          "401": { "description": "Credenciais inválidas" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Valida sessão JWT",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Sessão válida" },
+          "401": { "description": "Token inválido ou expirado" }
+        }
+      }
+    },
+    "/create-payment": {
+      "post": {
+        "summary": "Cria cobrança de pagamento",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CreatePaymentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Cobrança criada" },
+          "400": { "description": "Dados inválidos" }
+        }
+      }
+    },
+    "/admin/status": {
+      "get": {
+        "summary": "Status geral do sistema",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Status atual" }
+        }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "summary": "Métricas do painel administrativo",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "schema": { "type": "integer", "default": 30 }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Métricas consolidadas" }
+        }
+      }
+    },
+    "/admin/audit": {
+      "get": {
+        "summary": "Consulta logs de auditoria",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Lista de eventos auditáveis" }
+        }
+      }
+    },
+    "/connector/events": {
+      "post": {
+        "summary": "Ingestão de eventos do plugin de conexão",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Evento armazenado" }
+        }
+      }
+    }
+  }
+}

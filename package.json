@@ -1,0 +1,27 @@
+{
+  "name": "simplex-website",
+  "version": "1.0.0",
+  "description": "Simplex Network Website & Panel",
+  "main": "index.js",
+  "scripts": {
+    "start": "serve .",
+    "build": "echo 'No build step required for static site' && exit 0",
+    "test:backend": "python -m unittest discover -p \"test*.py\"",
+    "setup:zero": "powershell -ExecutionPolicy Bypass -File ./setup.ps1",
+    "deploy:zero": "powershell -ExecutionPolicy Bypass -File ./deploy.ps1"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": [
+    "minecraft",
+    "server",
+    "payment",
+    "pix"
+  ],
+  "author": "Simplex Network",
+  "license": "ISC",
+  "dependencies": {
+    "serve": "^14.2.0"
+  }
+}

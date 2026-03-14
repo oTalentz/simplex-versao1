@@ -50,7 +50,7 @@ class TestPaymentServer(unittest.TestCase):
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        self.assertIn("Missing required fields", data['error'])
+        self.assertIn("Campos obrigatórios ausentes", data['error'])
 
     def test_validation_error_invalid_product(self):
         payload = self.valid_payload.copy()
@@ -62,7 +62,7 @@ class TestPaymentServer(unittest.TestCase):
         
         self.assertEqual(response.status_code, 400)
         data = json.loads(response.data)
-        self.assertIn("Invalid product", data['error'])
+        self.assertIn("Produto inválido", data['error'])
 
     @patch('server.requests.Session.post')
     def test_api_timeout(self, mock_post):

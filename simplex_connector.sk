@@ -1,0 +1,101 @@
+options:
+    simplex_api: http://localhost:5000
+    simplex_user: admin
+    simplex_pass: admin123
+    simplex_agent: mc-server-01
+
+on script load:
+    if {simplex::api} is not set:
+        set {simplex::api} to "{@simplex_api}"
+    if {simplex::user} is not set:
+        set {simplex::user} to "{@simplex_user}"
+    if {simplex::pass} is not set:
+        set {simplex::pass} to "{@simplex_pass}"
+    if {simplex::agent} is not set:
+        set {simplex::agent} to "{@simplex_agent}"
+    delete {simplex::token}
+    delete {simplex::token_exp}
+
+function simplex_login() :: boolean:
+    set {_url} to "%{simplex::api}%/auth/login"
+    set {_body} to "{\"username\":\"%{simplex::user}%\",\"password\":\"%{simplex::pass}%\"}"
+    set {_headers::*} to "Content-Type:application/json"
+    set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
+    set {_status} to response status of {_response}
+    if {_status} is not 200:
+        return false
+    set {_content} to response content of {_response}
+    if {_content} matches ".*\"token\"\\s*:\\s*\"([^\"]+)\".*":
+        set {simplex::token} to regex group 1
+        set {simplex::token_exp} to now + 110 minutes
+        return true
+    return false
+
+function simplex_send(eventType: text, payloadJson: text) :: boolean:
+    if {simplex::token} is not set:
+        if simplex_login() is false:
+            return false
+    if {simplex::token_exp} is set:
+        if {simplex::token_exp} is before now:
+            if simplex_login() is false:
+                return false
+    set {_url} to "%{simplex::api}%/connector/events"
+    set {_body} to "{\"type\":\"%{_eventType}%\",\"payload\":%{_payloadJson}%}"
+    set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
+    set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
+    set {_status} to response status of {_response}
+    if {_status} is 200:
+        return true
+    if {_status} is 401:
+        delete {simplex::token}
+        if simplex_login() is false:
+            return false
+        set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
+        set {_retry} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
+        if response status of {_retry} is 200:
+            return true
+    return false
+
+function simplex_emit(eventType: text, payloadJson: text):
+    if simplex_send({_eventType}, {_payloadJson}) is false:
+        add "%{_eventType}%||%{_payloadJson}%" to {simplex::queue::*}
+
+function simplex_flush_queue():
+    if size of {simplex::queue::*} <= 0:
+        stop
+    loop {simplex::queue::*}:
+        set {_parts::*} to loop-value split at "||"
+        if size of {_parts::*} < 2:
+            remove loop-value from {simplex::queue::*}
+            next loop
+        set {_eventType} to {_parts::1}
+        set {_payloadJson} to {_parts::2}
+        if simplex_send({_eventType}, {_payloadJson}) is true:
+            remove loop-value from {simplex::queue::*}
+        else:
+            stop
+
+every 20 seconds:
+    simplex_emit("heartbeat", "{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}")
+    simplex_flush_queue()
+
+on join:
+    simplex_emit("player_join", "{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}")
+
+on quit:
+    simplex_emit("player_quit", "{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}")
+
+command /simplexstatus:
+    permission: op
+    trigger:
+        if simplex_send("manual_status", "{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}") is true:
+            send "&aSimplex Connector: evento enviado."
+        else:
+            send "&cSimplex Connector: falha no envio, evento foi para fila."
+
+command /simplexreload:
+    permission: op
+    trigger:
+        delete {simplex::token}
+        delete {simplex::token_exp}
+        send "&eSimplex Connector: sessão reiniciada."
