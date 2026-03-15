@@ -367,7 +367,7 @@ body {
     font-weight: 500;
 }
 
-.btn-refresh {
+.btn-refresh, .btn-secondary {
     background-color: transparent;
     border: 1px solid var(--border-color);
     color: var(--text-primary);
@@ -378,9 +378,10 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 500;
 }
 
-.btn-refresh:hover {
+.btn-refresh:hover, .btn-secondary:hover {
     background-color: var(--bg-hover);
     border-color: var(--accent-gold);
     color: var(--accent-gold);
@@ -506,11 +507,15 @@ body {
     background-color: var(--accent-gold);
     color: var(--bg-dark);
     border: none;
-    padding: 10px 20px;
+    padding: 8px 16px;
     border-radius: 6px;
     font-weight: 600;
     cursor: pointer;
     transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
 }
 
 .btn-primary:hover {
@@ -591,4 +596,9 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
     background: var(--text-secondary);
+}
+
+.actions {
+    display: flex;
+    gap: 10px;
 }

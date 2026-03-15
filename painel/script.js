@@ -645,9 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnPrev = document.getElementById('btn-prev-step');
         const btnNext = document.getElementById('btn-next-step');
         const btnSave = document.getElementById('btn-save-coupon');
-        const btnImport = document.getElementById('btn-import-coupons');
         const btnExport = document.getElementById('btn-export-coupons');
-        const fileImport = document.getElementById('file-import-coupons');
         
         // --- Stats Modal Logic ---
         const btnStats = document.getElementById('btn-coupon-stats');
@@ -777,19 +775,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalSteps = 3;
 
         function updateWizardUI() {
-            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.wizard-pane').forEach(p => {
                 p.classList.add('hidden');
                 p.style.display = 'none';
             });
             
-            const currentPane = document.querySelector(`.wizard-pane[data-step="\${currentStep}"]`);
+            const currentPane = document.querySelector(`.wizard-pane[data-step="${currentStep}"]`);
             if (currentPane) {
                 currentPane.classList.remove('hidden');
                 currentPane.style.display = 'block';
             }
             
-            const currentStepIndicator = document.querySelector(`.step[data-step="\${currentStep}"]`);
+            const currentStepIndicator = document.querySelector(`.step[data-step="${currentStep}"]`);
             if (currentStepIndicator) currentStepIndicator.classList.add('active'); // Add active class style logic if needed
             
             // Update buttons
@@ -925,62 +923,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
         
-        if (btnImport && fileImport) {
-            btnImport.addEventListener('click', () => fileImport.click());
-            
-            fileImport.addEventListener('change', async () => {
-                if (!fileImport.files.length) return;
-                
-                const file = fileImport.files[0];
-                const formData = new FormData();
-                formData.append('file', file);
-                
-                const btnText = btnImport.innerHTML;
-                btnImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
-                btnImport.disabled = true;
-                
-                try {
-                    // Note: apiFetch wrapper handles JSON responses, but for file upload we need specific handling if not JSON
-                    // But our apiFetch sets Content-Type to application/json automatically if not specified? 
-                    // Wait, apiFetch implementation:
-                    /*
-                    const fetchOptions = {
-                        ...options,
-                        headers: {
-                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-                            ...(options.headers || {})
-                        }
-                    };
-                    */
-                    // It doesn't force Content-Type unless we pass it.
-                    // But fetch with FormData automatically sets Content-Type to multipart/form-data with boundary.
-                    // So we should NOT set Content-Type header manually.
-                    
-                    const response = await fetch(`${API_BASE_URL}/admin/coupons/import`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        },
-                        body: formData
-                    });
-                    
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.error || 'Erro na importação');
-                    }
-                    
-                    const result = await response.json();
-                    alert(`Importação concluída! Sucesso: ${result.success_count}, Erros: ${result.error_count}`);
-                    fetchCoupons();
-                    fileImport.value = ''; // Reset
-                } catch (error) {
-                    alert('Erro ao importar: ' + error.message);
-                } finally {
-                    btnImport.innerHTML = btnText;
-                    btnImport.disabled = false;
-                }
-            });
-        }
+
         
         window.openCouponModal = (coupon = null) => {
             currentStep = 1;
