@@ -65,88 +65,110 @@
                 </div>
             </header>
 
-            <!-- System Status Grid -->
-            <section class="status-grid">
-                <div class="status-card">
-                    <div class="status-icon"><i class="fas fa-server"></i></div>
-                    <div class="status-info">
-                        <h3>API Server</h3>
-                        <p class="status-text" id="status-api">Verificando...</p>
+            <div id="view-dashboard" class="view-section">
+                <!-- System Status Grid -->
+                <section class="status-grid">
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-server"></i></div>
+                        <div class="status-info">
+                            <h3>API Server</h3>
+                            <p class="status-text" id="status-api">Verificando...</p>
+                        </div>
                     </div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon"><i class="fas fa-database"></i></div>
-                    <div class="status-info">
-                        <h3>Database</h3>
-                        <p class="status-text" id="status-db">Verificando...</p>
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-database"></i></div>
+                        <div class="status-info">
+                            <h3>Database</h3>
+                            <p class="status-text" id="status-db">Verificando...</p>
+                        </div>
                     </div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon"><i class="fas fa-gamepad"></i></div>
-                    <div class="status-info">
-                        <h3>Minecraft Server</h3>
-                        <p class="status-text" id="status-mc">Verificando...</p>
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-gamepad"></i></div>
+                        <div class="status-info">
+                            <h3>Minecraft Server</h3>
+                            <p class="status-text" id="status-mc">Verificando...</p>
+                        </div>
                     </div>
-                </div>
-                <div class="status-card">
-                    <div class="status-icon"><i class="fas fa-wallet"></i></div>
-                    <div class="status-info">
-                        <h3>Abacate Pay</h3>
-                        <p class="status-text" id="status-payment">Verificando...</p>
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-wallet"></i></div>
+                        <div class="status-info">
+                            <h3>Abacate Pay</h3>
+                            <p class="status-text" id="status-payment">Verificando...</p>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </section>
 
-            <!-- Analytics Cards -->
-            <section class="analytics-grid">
-                <div class="analytics-card">
-                    <h3>Faturamento Total</h3>
-                    <div class="value" id="total-revenue">R$ 0,00</div>
-                    <div class="trend positive"><i class="fas fa-arrow-up"></i> <span id="revenue-growth">0%</span> vs período anterior</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Lucro Líquido (Est.)</h3>
-                    <div class="value" id="net-profit">R$ 0,00</div>
-                    <div class="subtext">Descontando taxas (aprox. 5%)</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>VIPs Pagos</h3>
-                    <div class="value" id="vips-paid">0</div>
-                </div>
-                <div class="analytics-card">
-                    <h3>Entregas Pendentes</h3>
-                    <div class="value warning" id="vips-pending">0</div>
-                </div>
-            </section>
+                <!-- Analytics Cards -->
+                <section class="analytics-grid">
+                    <div class="analytics-card">
+                        <h3>Faturamento Total</h3>
+                        <div class="value" id="total-revenue">R$ 0,00</div>
+                        <div class="trend positive"><i class="fas fa-arrow-up"></i> <span id="revenue-growth">0%</span> vs período anterior</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Lucro Líquido (Est.)</h3>
+                        <div class="value" id="net-profit">R$ 0,00</div>
+                        <div class="subtext">Descontando taxas (aprox. 5%)</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>VIPs Pagos</h3>
+                        <div class="value" id="vips-paid">0</div>
+                    </div>
+                    <div class="analytics-card">
+                        <h3>Entregas Pendentes</h3>
+                        <div class="value warning" id="vips-pending">0</div>
+                    </div>
+                </section>
 
-            <!-- Recent Orders / Deliveries -->
-            <section class="data-section">
-                <div class="section-header">
-                    <h2>Últimas Vendas & Entregas</h2>
-                    <button class="btn-refresh" id="btn-refresh"><i class="fas fa-sync-alt"></i> Atualizar</button>
-                </div>
-                <div class="table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Data</th>
-                                <th>Cliente</th>
-                                <th>Produto</th>
-                                <th>Valor</th>
-                                <th>Status Pagamento</th>
-                                <th>Status Entrega</th>
-                            </tr>
-                        </thead>
-                        <tbody id="orders-table-body">
-                            <!-- Populated via JS -->
-                            <tr>
-                                <td colspan="7" class="text-center">Carregando dados...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                <!-- Recent Orders / Deliveries -->
+                <section class="data-section">
+                    <div class="section-header">
+                        <h2>Últimas Vendas & Entregas</h2>
+                        <button class="btn-refresh" id="btn-refresh"><i class="fas fa-sync-alt"></i> Atualizar</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Data</th>
+                                    <th>Cliente</th>
+                                    <th>Produto</th>
+                                    <th>Valor</th>
+                                    <th>Status Pagamento</th>
+                                    <th>Status Entrega</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table-body">
+                                <!-- Populated via JS -->
+                                <tr>
+                                    <td colspan="7" class="text-center">Carregando dados...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <div id="view-settings" class="view-section hidden" style="display: none;">
+                <section class="data-section">
+                    <div class="section-header">
+                        <h2>Conectar Servidor Minecraft</h2>
+                    </div>
+                    <div class="card-content" style="padding: 20px;">
+                        <p>Para conectar seu servidor automaticamente, digite abaixo o código que aparece no console do servidor ao iniciar o plugin.</p>
+                        <br>
+                        <div class="form-group" style="max-width: 400px;">
+                            <label for="pairing-code">Código de Pareamento</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input type="text" id="pairing-code" placeholder="Ex: A1B2C3" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                                <button id="btn-pair-server" class="btn-primary" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">Conectar</button>
+                            </div>
+                            <p id="pairing-status" style="margin-top: 10px; font-weight: 500;"></p>
+                        </div>
+                    </div>
+                </section>
+            </div>
         </main>
     </div>
 

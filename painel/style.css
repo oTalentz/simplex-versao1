@@ -26,6 +26,10 @@ body {
     overflow: hidden;
 }
 
+.hidden {
+    display: none !important;
+}
+
 .auth-gate {
     position: fixed;
     inset: 0;
@@ -34,10 +38,6 @@ body {
     align-items: center;
     justify-content: center;
     z-index: 1000;
-}
-
-.auth-gate.hidden {
-    display: none;
 }
 
 .auth-card {

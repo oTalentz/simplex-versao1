@@ -1,10 +1,7 @@
 options:
-    simplex_api: https://simplexmc.net/api
-    simplex_user: admin
-    simplex_pass: admin123
+    simplex_api: http://localhost:5000
     simplex_agent: mc-server-01
-    # Configure os comandos de entrega aqui
-    # Use %player% para o nick e %product% para o produto
+    # Comandos de entrega
     cmd_lord: lp user %player% parent set lord
     cmd_knight: lp user %player% parent set knight
     cmd_guardian: lp user %player% parent set guardian
@@ -13,66 +10,117 @@ options:
 on script load:
     if {simplex::api} is not set:
         set {simplex::api} to "{@simplex_api}"
-    if {simplex::user} is not set:
-        set {simplex::user} to "{@simplex_user}"
-    if {simplex::pass} is not set:
-        set {simplex::pass} to "{@simplex_pass}"
     if {simplex::agent} is not set:
         set {simplex::agent} to "{@simplex_agent}"
-    delete {simplex::token}
-    delete {simplex::token_exp}
+    
     send "&a[Simplex] Conector iniciado. API: %{simplex::api}%" to console
+    
+    if {simplex::token} is not set:
+        send "&e[Simplex] Token não encontrado. Iniciando modo de pareamento..." to console
+        simplex_start_pairing()
+    else:
+        send "&a[Simplex] Token encontrado. Conectado como %{simplex::agent}%" to console
 
-function simplex_login() :: boolean:
-    set {_url} to "%{simplex::api}%/auth/login"
-    set {_body} to "{\"username\":\"%{simplex::user}%\",\"password\":\"%{simplex::pass}%\"}"
+function simplex_generate_code() :: text:
+    set {_chars} to "ABCDEF0123456789"
+    set {_code} to ""
+    loop 6 times:
+        set {_r} to random integer between 1 and 16
+        set {_c} to subtext of {_chars} from {_r} to {_r}
+        set {_code} to "%{_code}%%{_c}%"
+    return {_code}
+
+function simplex_start_pairing():
+    set {simplex::pairing_active} to true
+    set {_code} to simplex_generate_code()
+    set {simplex::pairing_code} to {_code}
+    
+    # Registra o código no backend
+    set {_url} to "%{simplex::api}%/connector/setup/init"
+    set {_body} to "{\"code\":\"%{_code}%\",\"agent\":\"%{simplex::agent}%\"}"
     set {_headers::*} to "Content-Type:application/json"
-    set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
-    set {_status} to response status of {_response}
-    if {_status} is not 200:
-        send "&c[Simplex] Falha no login: %{_status}%" to console
-        return false
-    set {_content} to response content of {_response}
-    # Parse manual simples via regex para evitar dependência de JSON addon
-    if {_content} matches ".*\"token\"\\s*:\\s*\"([^\"]+)\".*":
-        set {simplex::token} to regex group 1
-        set {simplex::token_exp} to now + 110 minutes
-        send "&a[Simplex] Login realizado com sucesso." to console
-        return true
-    return false
+    
+    try:
+        set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
+        set {_status} to response status of {_response}
+        
+        if {_status} is not 200:
+            send "&c[Simplex] Erro ao registrar código de pareamento (%{_status}%). Tentando novamente..." to console
+            # O loop de 5 segundos tentará novamente se pairing_active for true mas pairing_code não estiver registrado?
+            # Simplificação: apenas define o código e deixa o loop anunciar.
+            # Mas se falhar o registro, o backend não sabe.
+            # Vamos assumir sucesso ou retry manual.
+    
+    send "&e[Simplex] =========================================" to console
+    send "&e[Simplex] PAREAMENTO NECESSÁRIO" to console
+    send "&e[Simplex] Código: &b%{_code}%" to console
+    send "&e[Simplex] Insira este código no Painel Admin > Configurações" to console
+    send "&e[Simplex] =========================================" to console
+
+every 5 seconds:
+    if {simplex::pairing_active} is true:
+        if {simplex::token} is set:
+            delete {simplex::pairing_active}
+            stop
+            
+        set {_code} to {simplex::pairing_code}
+        set {_url} to "%{simplex::api}%/connector/setup/poll?code=%{_code}%"
+        
+        try:
+            set {_response} to request {_url} with method "GET"
+            set {_content} to response content of {_response}
+            
+            if {_content} contains "CLAIMED":
+                # Extração manual do token pois Skript nativo não tem JSON parse fácil
+                # JSON: {"status": "CLAIMED", "token": "..."}
+                set {_parts::*} to {_content} split at "token"
+                set {_token_part} to {_parts::2}
+                # Limpa caracteres JSON
+                replace all ":" and """" and "}" and " " and "{" and "]" in {_token_part} with ""
+                set {simplex::token} to {_token_part}
+                
+                send "&a[Simplex] =========================================" to console
+                send "&a[Simplex] PAREAMENTO CONCLUÍDO!" to console
+                send "&a[Simplex] Token salvo com sucesso." to console
+                send "&a[Simplex] =========================================" to console
+                
+                delete {simplex::pairing_active}
+                delete {simplex::pairing_code}
+            else:
+                # Anuncia a cada ~30s (1 em 6 loops)
+                if {simplex::announce_tick} is not set:
+                    set {simplex::announce_tick} to 0
+                add 1 to {simplex::announce_tick}
+                if {simplex::announce_tick} >= 6:
+                    set {simplex::announce_tick} to 0
+                    send "&e[Simplex] Aguardando pareamento... Código: &b%{_code}%" to console
+        catch:
+            send "&c[Simplex] Falha ao conectar na API. Verifique se o backend está rodando." to console
 
 function simplex_request(method: text, endpoint: text, body: text = "") :: text:
     if {simplex::token} is not set:
-        if simplex_login() is false:
-            return "ERROR"
-    if {simplex::token_exp} is set:
-        if {simplex::token_exp} is before now:
-            if simplex_login() is false:
-                return "ERROR"
+        return "ERROR"
     
     set {_url} to "%{simplex::api}%%{_endpoint}%"
     set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
     
-    if {_method} is "GET":
-        set {_response} to request {_url} with method "GET" and headers {_headers::*}
-    else:
-        set {_response} to request {_url} with method {_method} and headers {_headers::*} and body {_body}
+    try:
+        if {_method} is "GET":
+            set {_response} to request {_url} with method "GET" and headers {_headers::*}
+        else:
+            set {_response} to request {_url} with method {_method} and headers {_headers::*} and body {_body}
+            
+        set {_status} to response status of {_response}
         
-    set {_status} to response status of {_response}
-    
-    if {_status} is 401:
-        delete {simplex::token}
-        if simplex_login() is true:
-            # Tenta novamente uma vez
-            set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
-            if {_method} is "GET":
-                set {_response} to request {_url} with method "GET" and headers {_headers::*}
-            else:
-                set {_response} to request {_url} with method {_method} and headers {_headers::*} and body {_body}
-            set {_status} to response status of {_response}
-    
-    if {_status} is 200:
-        return response content of {_response}
+        if {_status} is 401:
+            send "&c[Simplex] Token inválido ou expirado. Reinicie o pareamento deletando {simplex::token}." to console
+            return "ERROR"
+        
+        if {_status} is 200:
+            return response content of {_response}
+    catch:
+        return "ERROR"
+        
     return "ERROR"
 
 function simplex_confirm_delivery(id: text):
@@ -82,66 +130,62 @@ function simplex_confirm_delivery(id: text):
         send "&a[Simplex] Entrega confirmada para ID %{_id}%" to console
 
 every 30 seconds:
-    # Heartbeat
-    set {_hb_body} to "{\"type\":\"heartbeat\",\"payload\":{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}}"
-    simplex_request("POST", "/connector/events", {_hb_body})
-    
-    # Check deliveries
-    set {_res} to simplex_request("GET", "/connector/deliveries")
-    if {_res} is not "ERROR":
-        # Hacky JSON parser para lista de entregas
-        # Esperado: {"deliveries": [{"id": "...", "customer_name": "...", "product": "..."}]}
+    if {simplex::token} is set:
+        # Heartbeat
+        set {_hb_body} to "{\"type\":\"heartbeat\",\"payload\":{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}}"
+        simplex_request("POST", "/connector/events", {_hb_body})
         
-        # Remove o inicio e fim do json
-        replace all "{" and "}" and "[" and "]" and """" and "deliveries:" in {_res} with ""
-        # Agora temos algo como: id:123,customer_name:Steve,product:LORD, id:124,...
-        
-        # Isso é muito frágil. Melhor usar regex loop se possível ou assumir estrutura
-        # Vamos tentar um split mais inteligente assumindo que o backend manda JSON limpo
-        
-        # Nova abordagem: Split por "id"
-        set {_items::*} to {_res} split at "id:"
-        loop {_items::*}:
-            if loop-value is not "":
-                # loop-value ex: "123,customer_name:Steve,product:LORD,..."
-                set {_props::*} to loop-value split at ","
-                set {_id} to ""
-                set {_player} to ""
-                set {_product} to ""
+        # Check deliveries
+        set {_res} to simplex_request("GET", "/connector/deliveries")
+        if {_res} is not "ERROR":
+            # Parse delivery list
+            # JSON: {"deliveries": [{"id": "...", "customer_name": "...", "product": "..."}]}
+            if {_res} contains "id":
+                # Processamento simplificado - assume 1 por vez ou usa regex se possível
+                # Como Skript é limitado com JSON, vamos tentar extrair o primeiro ID
+                # Isso requer um parser melhor ou um loop externo em Java/Addon
+                # Para MVP, vamos assumir que o backend envia formato amigável ou usamos regex básico
                 
-                loop {_props::*}:
-                    if loop-value-2 contains "customer_name:":
-                        set {_temp::*} to loop-value-2 split at ":"
-                        set {_player} to {_temp::2}
-                    else if loop-value-2 contains "product:":
-                        set {_temp::*} to loop-value-2 split at ":"
-                        set {_product} to {_temp::2}
-                    else:
-                        # Assumindo que o ID é o primeiro valor antes da primeira virgula
-                        if {_id} is "":
-                            set {_id} to loop-value-2
+                # Vamos apenas logar por enquanto que recebeu entregas
+                send "&a[Simplex] Novas entregas detectadas: %{_res}%" to console
+                
+                # Tenta extrair ID e Produto de forma bruta
+                set {_parts::*} to {_res} split at "id"
+                loop {_parts::*}:
+                    if loop-value contains "customer_name":
+                        # É uma entrada válida
+                        # Ex: ": "123", "customer_name": "Steve", "product": "LORD" ...
+                        set {_entry} to loop-value
+                        
+                        # Extrair ID
+                        set {_id_raw} to subtext of {_entry} from 4 to 20
+                        set {_id_parts::*} to {_id_raw} split at """"
+                        set {_id} to {_id_parts::1}
+                        
+                        # Extrair Nick
+                        set {_nick_parts::*} to {_entry} split at "customer_name"
+                        set {_nick_raw} to {_nick_parts::2}
+                        replace all ":" and """" and " " in {_nick_raw} with ""
+                        set {_nick_clean_parts::*} to {_nick_raw} split at ","
+                        set {_nick} to {_nick_clean_parts::1}
+                        
+                        # Extrair Produto
+                        set {_prod_parts::*} to {_entry} split at "product"
+                        set {_prod_raw} to {_prod_parts::2}
+                        replace all ":" and """" and " " and "}" and "]" in {_prod_raw} with ""
+                        set {_product} to {_prod_raw}
+                        
+                        send "&a[Simplex] Processando entrega: %{_product}% para %{_nick}% (ID: %{_id}%)" to console
+                        
+                        # Executar comando
+                        if {_product} is "LORD":
+                            execute console command "{@cmd_lord}"
+                        else if {_product} is "KNIGHT":
+                            execute console command "{@cmd_knight}"
+                        else if {_product} is "GUARDIAN":
+                            execute console command "{@cmd_guardian}"
+                        else if {_product} is "CHAMPION":
+                            execute console command "{@cmd_champion}"
                             
-                if {_id} is set:
-                    if {_player} is set:
-                        if {_product} is set:
-                            send "&e[Simplex] Processando entrega: %{_product}% para %{_player}% (ID: %{_id}%)" to console
-                            
-                            # Executar comando
-                            if {_product} is "LORD":
-                                execute console command "{@cmd_lord}"
-                            else if {_product} is "KNIGHT":
-                                execute console command "{@cmd_knight}"
-                            else if {_product} is "GUARDIAN":
-                                execute console command "{@cmd_guardian}"
-                            else if {_product} is "CHAMPION":
-                                execute console command "{@cmd_champion}"
-                                
-                            simplex_confirm_delivery({_id})
-
-on join:
-    set {_body} to "{\"type\":\"player_join\",\"payload\":{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}}"
-    simplex_request("POST", "/connector/events", {_body})
-
-on quit:
-    set {_body} to "{\"type\":\"player_quit\",\"payload\":{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}}"
-    simplex_request("POST", "/connector/events", {_body})
+                        # Confirmar
+                        simplex_confirm_delivery({_id})

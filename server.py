@@ -174,6 +174,15 @@ def init_db():
             updated_at TIMESTAMP NOT NULL
         )
     """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS pairing_codes (
+            code TEXT PRIMARY KEY,
+            agent_name TEXT,
+            status TEXT DEFAULT 'PENDING',
+            token TEXT,
+            created_at TIMESTAMP
+        )
+    """)
     admin = conn.execute("SELECT id FROM admin_users WHERE username = ?", (ADMIN_USERNAME,)).fetchone()
     if not admin:
         conn.execute(
@@ -574,6 +583,87 @@ def connector_events():
     conn.close()
     audit(g.user.get("sub"), "connector_events", "success", {"type": event_type})
     return jsonify({"success": True})
+
+
+@app.route('/connector/setup/init', methods=['POST'])
+def connector_setup_init():
+    data, err = require_json()
+    if err:
+        return err
+    code = str(data.get("code", "")).strip().upper()
+    agent = str(data.get("agent", "")).strip()
+    if not code or not agent:
+        return jsonify({"error": "Missing code or agent"}), 400
+
+    conn = get_db_connection()
+    existing = conn.execute("SELECT status, token FROM pairing_codes WHERE code = ?", (code,)).fetchone()
+    
+    if existing:
+        if existing["status"] == "CLAIMED":
+            conn.close()
+            return jsonify({"status": "CLAIMED", "token": existing["token"]})
+        conn.execute("UPDATE pairing_codes SET agent_name = ?, created_at = ? WHERE code = ?", (agent, now_iso(), code))
+    else:
+        conn.execute("INSERT INTO pairing_codes (code, agent_name, status, created_at) VALUES (?, ?, 'PENDING', ?)", (code, agent, now_iso()))
+    
+    conn.commit()
+    conn.close()
+    return jsonify({"status": "PENDING"})
+
+
+@app.route('/connector/setup/poll', methods=['GET'])
+def connector_setup_poll():
+    code = request.args.get("code", "").strip().upper()
+    if not code:
+        return jsonify({"error": "Missing code"}), 400
+
+    conn = get_db_connection()
+    row = conn.execute("SELECT status, token FROM pairing_codes WHERE code = ?", (code,)).fetchone()
+    conn.close()
+
+    if not row:
+        return jsonify({"status": "NOT_FOUND"}), 404
+
+    if row["status"] == "CLAIMED":
+        return jsonify({"status": "CLAIMED", "token": row["token"]})
+
+    return jsonify({"status": "PENDING"})
+
+
+@app.route('/admin/connector/claim', methods=['POST'])
+@require_auth
+def admin_claim_connector():
+    if g.user.get("role") != "superadmin":
+        return jsonify({"error": "Forbidden"}), 403
+
+    data, err = require_json()
+    if err:
+        return err
+    code = str(data.get("code", "")).strip().upper()
+    
+    conn = get_db_connection()
+    row = conn.execute("SELECT * FROM pairing_codes WHERE code = ?", (code,)).fetchone()
+    
+    if not row:
+        conn.close()
+        return jsonify({"error": "Código não encontrado"}), 404
+
+    if row["status"] == "CLAIMED":
+        conn.close()
+        return jsonify({"error": "Código já resgatado"}), 400
+
+    agent_name = row["agent_name"]
+    now = int(time.time())
+    # Token valido por 10 anos para o conector
+    payload = {"sub": f"connector_{agent_name}_{code}", "role": "connector", "iat": now, "exp": now + 315360000}
+    token = jwt_encode(payload)
+
+    conn.execute("UPDATE pairing_codes SET status = 'CLAIMED', token = ? WHERE code = ?", (token, code))
+    conn.commit()
+    conn.close()
+
+    audit(g.user.get("sub"), "claim_connector", "success", {"code": code, "agent": agent_name})
+    return jsonify({"success": True, "agent": agent_name})
 
 
 @app.route('/connector/cache', methods=['GET'])
