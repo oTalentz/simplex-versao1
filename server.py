@@ -443,8 +443,8 @@ def _get_latest_connector_heartbeat(conn):
         except Exception:
             continue
         if str(payload.get("type", "")).strip().lower() == "heartbeat":
-            return _parse_iso(row["updated_at"])
-    return None
+            return _parse_iso(row["updated_at"]), payload.get("payload", {})
+    return None, {}
 
 
 def _mc_online_state(heartbeat_at):
@@ -671,13 +671,29 @@ def _stats_payload(days):
 
 
 def _status_payload():
-    payload = {"api_status": "online", "db_status": "online", "mc_status": "offline", "payment_status": "online" if ABACATE_API_TOKEN else "warning"}
+    payload = {
+        "api_status": "online",
+        "db_status": "online",
+        "mc_status": "offline",
+        "payment_status": "online" if ABACATE_API_TOKEN else "warning",
+        "mc_server_name": None,
+        "mc_players_online": 0,
+        "mc_last_seen": None
+    }
     try:
         conn = get_db_connection()
         conn.execute("SELECT 1").fetchone()
-        heartbeat = _get_latest_connector_heartbeat(conn)
+        heartbeat_at, heartbeat_data = _get_latest_connector_heartbeat(conn)
         conn.close()
-        payload["mc_status"] = _mc_online_state(heartbeat)
+        
+        status = _mc_online_state(heartbeat_at)
+        payload["mc_status"] = status
+        
+        if status != "offline" and heartbeat_data:
+            payload["mc_server_name"] = heartbeat_data.get("agent", "Unknown")
+            payload["mc_players_online"] = heartbeat_data.get("online", 0)
+            payload["mc_last_seen"] = heartbeat_at.isoformat() if heartbeat_at else None
+            
     except Exception:
         payload["db_status"] = "offline"
         payload["mc_status"] = "offline"

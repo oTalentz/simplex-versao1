@@ -151,20 +151,60 @@
             </div>
 
             <div id="view-settings" class="view-section hidden" style="display: none;">
-                <section class="data-section">
+                <!-- Server Status Info -->
+                <section id="server-connection-info" class="data-section" style="display: none; margin-bottom: 20px;">
+                    <div class="section-header">
+                        <h2>Status do Servidor</h2>
+                        <span class="badge badge-delivered" id="connection-badge">Online</span>
+                    </div>
+                    <div class="card-content" style="padding: 20px;">
+                        <div class="status-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 0;">
+                            <div class="status-card">
+                                <div class="status-icon"><i class="fas fa-server"></i></div>
+                                <div class="status-info">
+                                    <h3>Servidor</h3>
+                                    <p class="status-text ok" id="info-server-name">-</p>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <div class="status-icon"><i class="fas fa-users"></i></div>
+                                <div class="status-info">
+                                    <h3>Jogadores</h3>
+                                    <p class="status-text" id="info-players">0</p>
+                                </div>
+                            </div>
+                            <div class="status-card">
+                                <div class="status-icon"><i class="fas fa-clock"></i></div>
+                                <div class="status-info">
+                                    <h3>Última Resposta</h3>
+                                    <p class="status-text" id="info-last-seen">-</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="server-pairing-section" class="data-section">
                     <div class="section-header">
                         <h2>Conectar Servidor Minecraft</h2>
                     </div>
-                    <div class="card-content" style="padding: 20px;">
-                        <p>Para conectar seu servidor automaticamente, digite abaixo o código que aparece no console do servidor ao iniciar o plugin.</p>
-                        <br>
-                        <div class="form-group" style="max-width: 400px;">
-                            <label for="pairing-code">Código de Pareamento</label>
-                            <div style="display: flex; gap: 10px;">
-                                <input type="text" id="pairing-code" placeholder="Ex: A1B2C3" style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-                                <button id="btn-pair-server" class="btn-primary" style="padding: 10px 20px; background: var(--primary-color); color: white; border: none; border-radius: 5px; cursor: pointer;">Conectar</button>
+                    <div class="settings-container">
+                        <div class="settings-card">
+                            <div class="settings-icon">
+                                <i class="fas fa-plug"></i>
                             </div>
-                            <p id="pairing-status" style="margin-top: 10px; font-weight: 500;"></p>
+                            <div class="settings-content">
+                                <h3>Pareamento Automático</h3>
+                                <p>Para conectar seu servidor, digite o código exibido no console do servidor ao iniciar o plugin.</p>
+                                
+                                <div class="pairing-form">
+                                    <div class="input-group">
+                                        <input type="text" id="pairing-code" placeholder="Código (Ex: A1B2C3)">
+                                        <button id="btn-pair-server" class="btn-primary">Conectar</button>
+                                    </div>
+                                    <p id="pairing-status" class="status-text"></p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>

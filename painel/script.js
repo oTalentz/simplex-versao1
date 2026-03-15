@@ -54,6 +54,85 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
+    function setupDashboardInteractions() {
+        // Tab Switching Logic
+        const tabs = document.querySelectorAll('.nav-item[data-tab]');
+        const views = document.querySelectorAll('.view-section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = tab.getAttribute('data-tab');
+
+                // Update active tab
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                // Update visible view
+                views.forEach(view => {
+                    if (view.id === `view-${target}`) {
+                        view.classList.remove('hidden');
+                        view.style.display = 'block'; // Ensure visibility
+                    } else {
+                        view.classList.add('hidden');
+                        view.style.display = 'none'; // Ensure hidden
+                    }
+                });
+            });
+        });
+
+        // Pairing Logic
+        const pairBtn = document.getElementById('btn-pair-server');
+        const pairInput = document.getElementById('pairing-code');
+        const pairStatus = document.getElementById('pairing-status');
+
+        if (pairBtn) {
+            // Remove existing listeners to avoid duplicates if called multiple times
+            const newBtn = pairBtn.cloneNode(true);
+            pairBtn.parentNode.replaceChild(newBtn, pairBtn);
+            
+            newBtn.addEventListener('click', async () => {
+                const code = pairInput.value.trim().toUpperCase();
+                if (!code) {
+                    pairStatus.textContent = 'Digite o código de pareamento.';
+                    pairStatus.className = 'status-text error';
+                    return;
+                }
+
+                pairStatus.textContent = 'Conectando...';
+                pairStatus.className = 'status-text warning';
+                newBtn.disabled = true;
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/admin/connector/claim`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ code })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        pairStatus.textContent = `Servidor "${data.agent}" conectado com sucesso!`;
+                        pairStatus.className = 'status-text ok';
+                        pairInput.value = '';
+                        await fetchStatus(); // Update status indicators
+                    } else {
+                        throw new Error(data.error || 'Falha ao conectar servidor');
+                    }
+                } catch (error) {
+                    pairStatus.textContent = error.message;
+                    pairStatus.className = 'status-text error';
+                } finally {
+                    newBtn.disabled = false;
+                }
+            });
+        }
+    }
+
     async function validateSession() {
         if (!token) {
             showAuthGate();
@@ -63,80 +142,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await apiFetch('/auth/me');
             username = data.username || username;
             localStorage.setItem('simplex_admin_user', username);
-            // Tab Switching Logic
-    const tabs = document.querySelectorAll('.nav-item[data-tab]');
-    const views = document.querySelectorAll('.view-section');
-
-    tabs.forEach(tab => {
-        tab.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = tab.getAttribute('data-tab');
-
-            // Update active tab
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-
-            // Update visible view
-            views.forEach(view => {
-                if (view.id === `view-${target}`) {
-                    view.classList.remove('hidden');
-                    view.style.display = 'block'; // Ensure visibility
-                } else {
-                    view.classList.add('hidden');
-                    view.style.display = 'none'; // Ensure hidden
-                }
-            });
-        });
-    });
-
-    // Pairing Logic
-    const pairBtn = document.getElementById('btn-pair-server');
-    const pairInput = document.getElementById('pairing-code');
-    const pairStatus = document.getElementById('pairing-status');
-
-    if (pairBtn) {
-        pairBtn.addEventListener('click', async () => {
-            const code = pairInput.value.trim().toUpperCase();
-            if (!code) {
-                pairStatus.textContent = 'Digite o código de pareamento.';
-                pairStatus.className = 'status-text error';
-                return;
-            }
-
-            pairStatus.textContent = 'Conectando...';
-            pairStatus.className = 'status-text warning';
-            pairBtn.disabled = true;
-
-            try {
-                const response = await fetch(`${API_BASE_URL}/admin/connector/claim`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ code })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    pairStatus.textContent = `Servidor "${data.agent}" conectado com sucesso!`;
-                    pairStatus.className = 'status-text ok';
-                    pairInput.value = '';
-                    await fetchStatus(); // Update status indicators
-                } else {
-                    throw new Error(data.error || 'Falha ao conectar servidor');
-                }
-            } catch (error) {
-                pairStatus.textContent = error.message;
-                pairStatus.className = 'status-text error';
-            } finally {
-                pairBtn.disabled = false;
-            }
-        });
-    }
-
-    setSessionUserLabel();
+            
+            setSessionUserLabel();
             hideAuthGate();
             return true;
         } catch {
@@ -152,6 +159,28 @@ document.addEventListener('DOMContentLoaded', () => {
             updateStatusUI('db', data.db_status);
             updateStatusUI('mc', data.mc_status);
             updateStatusUI('payment', data.payment_status);
+
+            const connInfo = document.getElementById('server-connection-info');
+            const pairingSection = document.getElementById('server-pairing-section');
+            
+            if (data.mc_status === 'online' || data.mc_status === 'warning') {
+                if(connInfo) {
+                    connInfo.style.display = 'block';
+                    document.getElementById('info-server-name').textContent = data.mc_server_name || 'Desconhecido';
+                    document.getElementById('info-players').textContent = data.mc_players_online || 0;
+                    document.getElementById('info-last-seen').textContent = formatDate(data.mc_last_seen);
+                    
+                    const badge = document.getElementById('connection-badge');
+                    if(badge) {
+                        badge.textContent = data.mc_status === 'online' ? 'Online' : 'Instável';
+                        badge.className = `badge ${data.mc_status === 'online' ? 'badge-delivered' : 'badge-waiting'}`;
+                    }
+                }
+                if(pairingSection) pairingSection.style.display = 'none';
+            } else {
+                if(connInfo) connInfo.style.display = 'none';
+                if(pairingSection) pairingSection.style.display = 'block';
+            }
         } catch {
             updateStatusUI('api', 'error');
             updateStatusUI('db', 'error');
@@ -352,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     setSessionUserLabel();
+    setupDashboardInteractions();
     validateSession().then(async (ok) => {
         if (ok) {
             await fetchStatus();

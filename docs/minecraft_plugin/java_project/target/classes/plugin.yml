@@ -1,0 +1,11 @@
+name: SimplexConnector
+version: 1.0
+main: net.simplexmc.connector.SimplexConnector
+api-version: 1.13
+authors: [Simplex]
+description: Conector oficial para SimplexMC
+commands:
+  simplex:
+    description: Comandos principais do Simplex
+    usage: /simplex <reload|setup>
+    permission: simplex.admin

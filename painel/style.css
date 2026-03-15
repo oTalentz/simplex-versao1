@@ -435,6 +435,98 @@ body {
 
 .text-center { text-align: center; color: var(--text-secondary); }
 
+/* Settings Styles */
+.settings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.settings-card {
+    display: flex;
+    gap: 20px;
+    background-color: var(--bg-hover);
+    border-radius: 8px;
+    padding: 20px;
+    align-items: flex-start;
+}
+
+.settings-icon {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(207, 170, 110, 0.1);
+    color: var(--accent-gold);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.settings-content {
+    flex: 1;
+}
+
+.settings-content h3 {
+    font-size: 1.1rem;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.settings-content p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+    max-width: 450px;
+}
+
+.input-group input {
+    flex: 1;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 10px 15px;
+    border-radius: 6px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--accent-gold);
+}
+
+.btn-primary {
+    background-color: var(--accent-gold);
+    color: var(--bg-dark);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary:hover {
+    background-color: var(--accent-gold-hover);
+}
+
+.btn-primary:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+#pairing-status {
+    margin-top: 10px;
+    font-size: 0.9rem;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

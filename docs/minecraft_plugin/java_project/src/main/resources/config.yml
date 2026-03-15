@@ -1,0 +1,23 @@
+# ==============================================================================
+# CONFIGURAÇÃO DA API
+# ==============================================================================
+# URL do seu site (Produção)
+api_url: "https://www.simplexmc.net/api"
+
+# Nome do Agente (Identificador deste servidor)
+agent_name: "mc-server-01"
+
+# Token de Autenticação (Gerado automaticamente pelo pareamento)
+# NÃO ALTERE MANUALMENTE A MENOS QUE SAIBA O QUE ESTÁ FAZENDO
+auth_token: ""
+
+# Comandos de entrega
+# Use %player% para o nick do jogador
+products:
+  LORD: "lp user %player% parent set lord"
+  KNIGHT: "lp user %player% parent set knight"
+  GUARDIAN: "lp user %player% parent set guardian"
+  CHAMPION: "lp user %player% parent set champion"
+
+# Intervalo de verificação em segundos
+check_interval: 15
