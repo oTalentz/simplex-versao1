@@ -9,6 +9,7 @@ import secrets
 import sqlite3
 import logging
 import datetime
+import traceback
 from functools import wraps
 from flask import Flask, request, jsonify, g
 from flask_cors import CORS
@@ -444,24 +445,43 @@ def home():
 
 @app.route("/auth/login", methods=["POST"])
 def auth_login():
-    data, err = require_json()
-    if err:
-        return err
-    username = str(data.get("username", "")).strip()
-    password = str(data.get("password", ""))
-    if not username or not password:
-        return jsonify({"error": "Credenciais inválidas"}), 400
-    conn = get_db_connection()
-    user = conn.execute("SELECT * FROM admin_users WHERE username = ?", (username,)).fetchone()
-    conn.close()
-    if not user or not verify_password(password, user["password_hash"]):
-        audit(username or "unknown", "auth_login", "failed")
-        return jsonify({"error": "Usuário ou senha inválidos"}), 401
-    now = int(time.time())
-    payload = {"sub": username, "role": user["role"], "iat": now, "exp": now + JWT_EXP_MINUTES * 60}
-    token = jwt_encode(payload)
-    audit(username, "auth_login", "success")
-    return jsonify({"token": token, "expires_in": JWT_EXP_MINUTES * 60, "role": user["role"]})
+    try:
+        data, err = require_json()
+        if err:
+            return err
+
+        username = str(data.get("username", "")).strip()
+        password = str(data.get("password", ""))
+
+        if not username or not password:
+            return jsonify({"error": "Credenciais inválidas"}), 400
+
+        conn = get_db_connection()
+        user = conn.execute("SELECT * FROM admin_users WHERE username = ?", (username,)).fetchone()
+        conn.close()
+
+        if not user or not verify_password(password, user["password_hash"]):
+            audit(username or "unknown", "auth_login", "failed")
+            return jsonify({"error": "Usuário ou senha inválidos"}), 401
+
+        now = int(time.time())
+        payload = {
+            "sub": username,
+            "role": user["role"],
+            "iat": now,
+            "exp": now + JWT_EXP_MINUTES * 60
+        }
+        token = jwt_encode(payload)
+        audit(username, "auth_login", "success")
+
+        return jsonify({
+            "token": token,
+            "expires_in": JWT_EXP_MINUTES * 60,
+            "role": user["role"]
+        })
+    except Exception as e:
+        logger.error(f"Login error: {e}")
+        return jsonify({"error": "Internal Server Error", "details": traceback.format_exc()}), 500
 
 
 @app.route("/auth/me", methods=["GET"])
