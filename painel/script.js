@@ -247,40 +247,64 @@ document.addEventListener('DOMContentLoaded', () => {
     loginForm.addEventListener('submit', async (event) => {
         event.preventDefault();
         loginError.textContent = '';
+        const btn = loginForm.querySelector('button[type="submit"]');
+        const originalText = btn.textContent;
+        btn.textContent = 'Processando...';
+        btn.disabled = true;
+
         const loginUsername = document.getElementById('login-username').value.trim();
         const loginPassword = document.getElementById('login-password').value;
+
+        console.log('[DEBUG] Tentando login com:', loginUsername);
+        console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
+
         try {
             let response;
             try {
+                console.log('[DEBUG] Fetching /auth/login...');
                 response = await fetch(`${API_BASE_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username: loginUsername, password: loginPassword })
                 });
-            } catch {
-                throw new Error('Backend offline. Inicie com: python server.py');
+                console.log('[DEBUG] Fetch response:', response.status);
+            } catch (err) {
+                console.error('[DEBUG] Fetch error:', err);
+                throw new Error(`Backend offline ou inacessível em ${API_BASE_URL}. Verifique se o server.py está rodando ou se a URL da API está correta.`);
             }
+            
             let data = {};
             try {
                 data = await response.json();
-            } catch {
+                console.log('[DEBUG] JSON data:', data);
+            } catch (jsonErr) {
+                console.error('[DEBUG] JSON parse error:', jsonErr);
                 if (!response.ok) {
-                    throw new Error('Resposta inválida no login');
+                    throw new Error('Resposta inválida no login (não é JSON)');
                 }
             }
+
             if (!response.ok) {
                 throw new Error(data.error || 'Falha de autenticação');
             }
+
             token = data.token;
             username = loginUsername;
             localStorage.setItem('simplex_admin_token', token);
             localStorage.setItem('simplex_admin_user', username);
+            
+            console.log('[DEBUG] Login sucesso! Token salvo.');
+            
             setSessionUserLabel();
             hideAuthGate();
             await fetchStatus();
             await fetchStats();
         } catch (error) {
+            console.error('[DEBUG] Erro final:', error);
             loginError.textContent = error.message;
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
         }
     });
 
