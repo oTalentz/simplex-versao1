@@ -725,6 +725,7 @@ def _validate_coupon_logic(code, original_amount, customer_email=None):
     return True, "Cupom aplicado com sucesso", percent, discount_amount
 
 
+@app.route('/validate-coupon', methods=['POST'])
 @app.route('/api/validate-coupon', methods=['POST'])
 def validate_coupon_endpoint():
     data, err = require_json()
@@ -769,6 +770,7 @@ def _record_coupon_usage(conn, coupon_code, email, order_id):
             (coupon_code, email, order_id, now_iso())
         )
 
+@app.route('/payment/create', methods=['POST'])
 @app.route('/api/payment/create', methods=['POST'])
 def create_payment():
     req_id = int(time.time() * 1000)
@@ -836,6 +838,9 @@ def create_payment():
         return jsonify({"error": "Internal Server Error"}), 500
 
 
+@app.route('/create-pix-payment', methods=['POST'])
+@app.route('/api/create-pix-payment', methods=['POST'])
+@app.route('/payment/create-pix', methods=['POST'])
 @app.route('/api/payment/create-pix', methods=['POST'])
 def create_pix_payment():
     data, err = require_json()
