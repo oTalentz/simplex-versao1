@@ -1,8 +1,14 @@
 options:
-    simplex_api: http://localhost:5000
+    simplex_api: https://simplexmc.net/api
     simplex_user: admin
     simplex_pass: admin123
     simplex_agent: mc-server-01
+    # Configure os comandos de entrega aqui
+    # Use %player% para o nick e %product% para o produto
+    cmd_lord: lp user %player% parent set lord
+    cmd_knight: lp user %player% parent set knight
+    cmd_guardian: lp user %player% parent set guardian
+    cmd_champion: lp user %player% parent set champion
 
 on script load:
     if {simplex::api} is not set:
@@ -15,6 +21,7 @@ on script load:
         set {simplex::agent} to "{@simplex_agent}"
     delete {simplex::token}
     delete {simplex::token_exp}
+    send "&a[Simplex] Conector iniciado. API: %{simplex::api}%" to console
 
 function simplex_login() :: boolean:
     set {_url} to "%{simplex::api}%/auth/login"
@@ -23,79 +30,118 @@ function simplex_login() :: boolean:
     set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
     set {_status} to response status of {_response}
     if {_status} is not 200:
+        send "&c[Simplex] Falha no login: %{_status}%" to console
         return false
     set {_content} to response content of {_response}
+    # Parse manual simples via regex para evitar dependência de JSON addon
     if {_content} matches ".*\"token\"\\s*:\\s*\"([^\"]+)\".*":
         set {simplex::token} to regex group 1
         set {simplex::token_exp} to now + 110 minutes
+        send "&a[Simplex] Login realizado com sucesso." to console
         return true
     return false
 
-function simplex_send(eventType: text, payloadJson: text) :: boolean:
+function simplex_request(method: text, endpoint: text, body: text = "") :: text:
     if {simplex::token} is not set:
         if simplex_login() is false:
-            return false
+            return "ERROR"
     if {simplex::token_exp} is set:
         if {simplex::token_exp} is before now:
             if simplex_login() is false:
-                return false
-    set {_url} to "%{simplex::api}%/connector/events"
-    set {_body} to "{\"type\":\"%{_eventType}%\",\"payload\":%{_payloadJson}%}"
+                return "ERROR"
+    
+    set {_url} to "%{simplex::api}%%{_endpoint}%"
     set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
-    set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
+    
+    if {_method} is "GET":
+        set {_response} to request {_url} with method "GET" and headers {_headers::*}
+    else:
+        set {_response} to request {_url} with method {_method} and headers {_headers::*} and body {_body}
+        
     set {_status} to response status of {_response}
-    if {_status} is 200:
-        return true
+    
     if {_status} is 401:
         delete {simplex::token}
-        if simplex_login() is false:
-            return false
-        set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
-        set {_retry} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
-        if response status of {_retry} is 200:
-            return true
-    return false
+        if simplex_login() is true:
+            # Tenta novamente uma vez
+            set {_headers::*} to "Content-Type:application/json" and "Authorization:Bearer %{simplex::token}%"
+            if {_method} is "GET":
+                set {_response} to request {_url} with method "GET" and headers {_headers::*}
+            else:
+                set {_response} to request {_url} with method {_method} and headers {_headers::*} and body {_body}
+            set {_status} to response status of {_response}
+    
+    if {_status} is 200:
+        return response content of {_response}
+    return "ERROR"
 
-function simplex_emit(eventType: text, payloadJson: text):
-    if simplex_send({_eventType}, {_payloadJson}) is false:
-        add "%{_eventType}%||%{_payloadJson}%" to {simplex::queue::*}
+function simplex_confirm_delivery(id: text):
+    set {_body} to "{\"id\":\"%{_id}%\"}"
+    set {_res} to simplex_request("POST", "/connector/deliveries/confirm", {_body})
+    if {_res} is not "ERROR":
+        send "&a[Simplex] Entrega confirmada para ID %{_id}%" to console
 
-function simplex_flush_queue():
-    if size of {simplex::queue::*} <= 0:
-        stop
-    loop {simplex::queue::*}:
-        set {_parts::*} to loop-value split at "||"
-        if size of {_parts::*} < 2:
-            remove loop-value from {simplex::queue::*}
-            next loop
-        set {_eventType} to {_parts::1}
-        set {_payloadJson} to {_parts::2}
-        if simplex_send({_eventType}, {_payloadJson}) is true:
-            remove loop-value from {simplex::queue::*}
-        else:
-            stop
-
-every 20 seconds:
-    simplex_emit("heartbeat", "{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}")
-    simplex_flush_queue()
+every 30 seconds:
+    # Heartbeat
+    set {_hb_body} to "{\"type\":\"heartbeat\",\"payload\":{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}}"
+    simplex_request("POST", "/connector/events", {_hb_body})
+    
+    # Check deliveries
+    set {_res} to simplex_request("GET", "/connector/deliveries")
+    if {_res} is not "ERROR":
+        # Hacky JSON parser para lista de entregas
+        # Esperado: {"deliveries": [{"id": "...", "customer_name": "...", "product": "..."}]}
+        
+        # Remove o inicio e fim do json
+        replace all "{" and "}" and "[" and "]" and """" and "deliveries:" in {_res} with ""
+        # Agora temos algo como: id:123,customer_name:Steve,product:LORD, id:124,...
+        
+        # Isso é muito frágil. Melhor usar regex loop se possível ou assumir estrutura
+        # Vamos tentar um split mais inteligente assumindo que o backend manda JSON limpo
+        
+        # Nova abordagem: Split por "id"
+        set {_items::*} to {_res} split at "id:"
+        loop {_items::*}:
+            if loop-value is not "":
+                # loop-value ex: "123,customer_name:Steve,product:LORD,..."
+                set {_props::*} to loop-value split at ","
+                set {_id} to ""
+                set {_player} to ""
+                set {_product} to ""
+                
+                loop {_props::*}:
+                    if loop-value-2 contains "customer_name:":
+                        set {_temp::*} to loop-value-2 split at ":"
+                        set {_player} to {_temp::2}
+                    else if loop-value-2 contains "product:":
+                        set {_temp::*} to loop-value-2 split at ":"
+                        set {_product} to {_temp::2}
+                    else:
+                        # Assumindo que o ID é o primeiro valor antes da primeira virgula
+                        if {_id} is "":
+                            set {_id} to loop-value-2
+                            
+                if {_id} is set:
+                    if {_player} is set:
+                        if {_product} is set:
+                            send "&e[Simplex] Processando entrega: %{_product}% para %{_player}% (ID: %{_id}%)" to console
+                            
+                            # Executar comando
+                            if {_product} is "LORD":
+                                execute console command "{@cmd_lord}"
+                            else if {_product} is "KNIGHT":
+                                execute console command "{@cmd_knight}"
+                            else if {_product} is "GUARDIAN":
+                                execute console command "{@cmd_guardian}"
+                            else if {_product} is "CHAMPION":
+                                execute console command "{@cmd_champion}"
+                                
+                            simplex_confirm_delivery({_id})
 
 on join:
-    simplex_emit("player_join", "{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}")
+    set {_body} to "{\"type\":\"player_join\",\"payload\":{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}}"
+    simplex_request("POST", "/connector/events", {_body})
 
 on quit:
-    simplex_emit("player_quit", "{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}")
-
-command /simplexstatus:
-    permission: op
-    trigger:
-        if simplex_send("manual_status", "{\"agent\":\"%{simplex::agent}%\",\"online\":%number of all players%}") is true:
-            send "&aSimplex Connector: evento enviado."
-        else:
-            send "&cSimplex Connector: falha no envio, evento foi para fila."
-
-command /simplexreload:
-    permission: op
-    trigger:
-        delete {simplex::token}
-        delete {simplex::token_exp}
-        send "&eSimplex Connector: sessão reiniciada."
+    set {_body} to "{\"type\":\"player_quit\",\"payload\":{\"player\":\"%player%\",\"agent\":\"%{simplex::agent}%\"}}"
+    simplex_request("POST", "/connector/events", {_body})

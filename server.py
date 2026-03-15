@@ -284,13 +284,7 @@ def deliver_vip_rcon(nickname, product):
             return response.status_code in (200, 201, 202)
         except Exception:
             return False
-    try:
-        conn = get_db_connection()
-        heartbeat = _get_latest_connector_heartbeat(conn)
-        conn.close()
-        return _mc_online_state(heartbeat) != "offline"
-    except Exception:
-        return False
+    return False
 
 
 def _parse_iso(value):
@@ -491,7 +485,7 @@ def abacate_webhook():
     conn.execute("UPDATE orders SET status = ?, updated_at = ? WHERE id = ?", (new_status, now_iso(), bill_id))
     if new_status == "PAID" and order["delivery_status"] != "DELIVERED":
         delivered = deliver_vip_rcon(order["customer_name"], order["product"])
-        delivery_status = "DELIVERED" if delivered else "ROLLBACK_PENDING"
+        delivery_status = "DELIVERED" if delivered else "PENDING"
         conn.execute("UPDATE orders SET delivery_status = ?, updated_at = ? WHERE id = ?", (delivery_status, now_iso(), bill_id))
     conn.commit()
     conn.close()
@@ -593,6 +587,37 @@ def connector_cache():
     ).fetchall()
     conn.close()
     return jsonify({"items": [dict(row) for row in rows]})
+
+
+@app.route('/connector/deliveries', methods=['GET'])
+@require_auth
+def connector_deliveries():
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT id, customer_name, product FROM orders WHERE status = 'PAID' AND delivery_status = 'PENDING' LIMIT 50"
+    ).fetchall()
+    conn.close()
+    return jsonify({"deliveries": [dict(row) for row in rows]})
+
+
+@app.route('/connector/deliveries/confirm', methods=['POST'])
+@require_auth
+def connector_confirm_delivery():
+    data, err = require_json()
+    if err:
+        return err
+    order_id = data.get("id")
+    if not order_id:
+        return jsonify({"error": "id é obrigatório"}), 400
+    conn = get_db_connection()
+    conn.execute(
+        "UPDATE orders SET delivery_status = 'DELIVERED', updated_at = ? WHERE id = ?",
+        (now_iso(), order_id)
+    )
+    conn.commit()
+    conn.close()
+    audit(g.user.get("sub"), "connector_confirm_delivery", "success", {"order_id": order_id})
+    return jsonify({"success": True})
 
 
 @sock.route('/ws')
