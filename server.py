@@ -1288,6 +1288,7 @@ def swagger_json():
 
 
 @app.route('/admin/coupons', methods=['GET'])
+@app.route('/api/admin/coupons', methods=['GET'])
 @require_auth
 def admin_get_coupons():
     conn = get_db_connection()
@@ -1296,6 +1297,7 @@ def admin_get_coupons():
     return jsonify([dict(row) for row in coupons])
 
 @app.route('/admin/coupons', methods=['POST'])
+@app.route('/api/admin/coupons', methods=['POST'])
 @require_auth
 def admin_create_coupon():
     data, err = require_json()
@@ -1339,6 +1341,7 @@ def admin_create_coupon():
     return jsonify({"success": True, "code": code})
 
 @app.route('/admin/coupons/<code>', methods=['PUT'])
+@app.route('/api/admin/coupons/<code>', methods=['PUT'])
 @require_auth
 def admin_update_coupon(code):
     data, err = require_json()
@@ -1385,6 +1388,7 @@ def admin_update_coupon(code):
     return jsonify({"success": True})
 
 @app.route('/admin/coupons/<code>', methods=['DELETE'])
+@app.route('/api/admin/coupons/<code>', methods=['DELETE'])
 @require_auth
 def admin_delete_coupon(code):
     code = code.upper()
@@ -1397,6 +1401,7 @@ def admin_delete_coupon(code):
     return jsonify({"success": True})
 
 @app.route('/admin/coupons/import', methods=['POST'])
+@app.route('/api/admin/coupons/import', methods=['POST'])
 @require_auth
 def admin_import_coupons():
     if 'file' not in request.files:
@@ -1442,6 +1447,7 @@ def admin_import_coupons():
         return jsonify({"error": str(e)}), 500
 
 @app.route('/admin/coupons/export', methods=['GET'])
+@app.route('/api/admin/coupons/export', methods=['GET'])
 @require_auth
 def admin_export_coupons():
     conn = get_db_connection()
@@ -1462,6 +1468,7 @@ def admin_export_coupons():
 
 
 @app.route('/admin/coupons/<code>/logs', methods=['GET'])
+@app.route('/api/admin/coupons/<code>/logs', methods=['GET'])
 @require_auth
 def admin_get_coupon_logs(code):
     conn = get_db_connection()
@@ -1475,6 +1482,7 @@ def admin_get_coupon_logs(code):
 
 
 @app.route('/admin/coupons/stats', methods=['GET'])
+@app.route('/api/admin/coupons/stats', methods=['GET'])
 @require_auth
 def admin_coupon_stats():
     conn = get_db_connection()
