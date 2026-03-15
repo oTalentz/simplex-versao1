@@ -283,13 +283,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
             let data = {};
             try {
-                data = await response.json();
-                console.log('[DEBUG] JSON data:', data);
-            } catch (jsonErr) {
-                console.error('[DEBUG] JSON parse error:', jsonErr);
-                if (!response.ok) {
-                    throw new Error('Resposta inválida no login (não é JSON)');
+                // Tenta ler como texto primeiro para debug
+                const rawText = await response.text();
+                try {
+                    data = JSON.parse(rawText);
+                    console.log('[DEBUG] JSON data:', data);
+                } catch (parseErr) {
+                    console.error('[DEBUG] Falha ao parsear JSON. Resposta bruta:', rawText);
+                    // Se a resposta for HTML de erro, tentamos extrair algo útil ou apenas mostramos erro genérico
+                    if (rawText.includes("Internal Server Error")) {
+                        throw new Error("Erro Interno no Servidor (500). Verifique os logs do Vercel.");
+                    }
+                    throw new Error(`Resposta inválida do servidor: ${rawText.substring(0, 100)}...`);
                 }
+            } catch (jsonErr) {
+                console.error('[DEBUG] Erro de processamento:', jsonErr);
+                if (!response.ok) {
+                    // Se já falhou o parse e o status não é ok, usa a mensagem do erro de parse ou genérica
+                    throw new Error(jsonErr.message || 'Resposta inválida no login (não é JSON)');
+                }
+                throw jsonErr; // Se status ok mas JSON inválido, lança erro
             }
 
             if (!response.ok) {
