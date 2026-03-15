@@ -65,6 +65,38 @@ def internal_error(error):
 def not_found_error(error):
     return jsonify({"error": "Not Found"}), 404
 
+
+@app.route('/debug-db', methods=['GET'])
+def debug_db():
+    try:
+        conn = get_db_connection()
+        # Try to read tables
+        tables = conn.execute("SELECT name FROM sqlite_master WHERE type='table'").fetchall()
+        # Try to count users
+        users_count = "Unknown"
+        try:
+            users = conn.execute("SELECT count(*) as c FROM admin_users").fetchone()
+            users_count = users["c"]
+        except Exception as e:
+            users_count = f"Error: {str(e)}"
+        
+        conn.close()
+        
+        return jsonify({
+            "status": "online",
+            "db_type": "Turso" if USE_TURSO else "SQLite",
+            "tables": [dict(row) for row in tables],
+            "users_count": users_count,
+            "turso_configured": bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "error": str(e),
+            "turso_configured": bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
+        }), 500
+
+
 try:
     from flask_sock import Sock
     sock = Sock(app)

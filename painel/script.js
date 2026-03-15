@@ -306,7 +306,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             if (!response.ok) {
-                throw new Error(data.error || 'Falha de autenticação');
+                let msg = data.error || 'Falha de autenticação';
+                if (data.details) {
+                    msg += `: ${data.details}`;
+                }
+                throw new Error(msg);
             }
 
             token = data.token;
