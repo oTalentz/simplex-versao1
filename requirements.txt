@@ -4,3 +4,4 @@ requests
 python-dotenv
 websocket-client
 flask-sock
+libsql-client

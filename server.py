@@ -19,6 +19,19 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Setup Turso/LibSQL if configured
+TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
+TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
+USE_TURSO = bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
+
+libsql_client = None
+if USE_TURSO:
+    try:
+        import libsql_client
+    except ImportError:
+        print("Warning: TURSO_DATABASE_URL set but libsql-client not installed. Falling back to SQLite.")
+        USE_TURSO = False
+
 def _build_log_handlers():
     handlers = [logging.StreamHandler()]
     if os.getenv("VERCEL"):
@@ -125,7 +138,50 @@ def verify_password(password, stored):
     return hmac.compare_digest(hash_password(password, salt), f"{salt}${digest}")
 
 
+class TursoCursorWrapper:
+    def __init__(self, result_set):
+        self.result_set = result_set
+        self.current_index = 0
+        # Convert columns to list of names if they are objects
+        self.columns = list(result_set.columns) if result_set.columns else []
+
+    def fetchone(self):
+        if self.current_index < len(self.result_set.rows):
+            row = self.result_set.rows[self.current_index]
+            self.current_index += 1
+            # Return a dict-like object (sqlite3.Row emulation)
+            return dict(zip(self.columns, row))
+        return None
+
+    def fetchall(self):
+        return [dict(zip(self.columns, row)) for row in self.result_set.rows]
+
+    def close(self):
+        pass
+
+
+class TursoConnectionWrapper:
+    def __init__(self, url, auth_token):
+        self.client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
+        self.row_factory = None  # Emulator placeholder
+
+    def execute(self, sql, params=()):
+        try:
+            rs = self.client.execute(sql, params)
+            return TursoCursorWrapper(rs)
+        except Exception as e:
+            raise e
+
+    def commit(self):
+        pass
+
+    def close(self):
+        self.client.close()
+
+
 def get_db_connection():
+    if USE_TURSO and libsql_client:
+        return TursoConnectionWrapper(TURSO_DATABASE_URL, TURSO_AUTH_TOKEN)
     conn = sqlite3.connect(DB_NAME)
     conn.row_factory = sqlite3.Row
     return conn
@@ -663,7 +719,7 @@ def admin_claim_connector():
     conn.close()
 
     audit(g.user.get("sub"), "claim_connector", "success", {"code": code, "agent": agent_name})
-    return jsonify({"success": True, "agent": agent_name})
+    return jsonify({"success": True, "agent": agent_name, "token": token})
 
 
 @app.route('/connector/cache', methods=['GET'])
