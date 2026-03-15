@@ -200,18 +200,25 @@ public class SimplexConnector extends JavaPlugin {
 
         String commandTemplate = getConfig().getString("products." + product);
         if (commandTemplate != null) {
-            String finalCommand = commandTemplate.replace("%player%", customerName);
-            
-            // Execute command on main thread
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);
-                }
-            }.runTask(this);
-            
-            // Confirm delivery
-            confirmDelivery(id);
+                String finalCommand = commandTemplate.replace("%player%", customerName);
+                
+                // Execute command on main thread
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), finalCommand);
+                        
+                        // Send confirmation message to player
+                        org.bukkit.entity.Player player = Bukkit.getPlayer(customerName);
+                        if (player != null && player.isOnline()) {
+                            player.sendMessage(ChatColor.GREEN + "Parabéns! Seu " + product.replace("_PLUS", "+") + " foi ativado com sucesso!");
+                            player.sendMessage(ChatColor.GOLD + "Aproveite seus novos benefícios!");
+                        }
+                    }
+                }.runTask(this);
+                
+                // Confirm delivery
+                confirmDelivery(id);
         } else {
             getLogger().warning("Produto desconhecido: " + product);
         }
