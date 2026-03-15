@@ -1,12 +1,12 @@
 options:
     # ==============================================================================
-    # CONFIGURAÇÃO DA API (MUITO IMPORTANTE)
+    # CONFIGURAÇÃO DA API
     # ==============================================================================
-    # Se o seu site está na Vercel, coloque: https://nome-do-seu-projeto.vercel.app/api
-    # Se o servidor e o site estão no mesmo PC: http://localhost:5000
-    # Se o site está em outro PC na mesma rede: http://192.168.x.x:5000
-    # ==============================================================================
-    simplex_api: http://localhost:5000
+    # URL do seu site (Produção)
+    simplex_api: https://www.simplexmc.net/api
+    
+    # Se estiver testando no PC (Localhost), descmaente a linha abaixo e comente a de cima:
+    # simplex_api: http://localhost:5000
     
     simplex_agent: mc-server-01
     
@@ -51,13 +51,13 @@ function simplex_start_pairing():
     set {_body} to "{""code"":""%{_code}%"",""agent"":""%{simplex::agent}%""}"
     set {_headers::*} to "Content-Type:application/json"
     
-    # Removido try/catch (não suportado nativamente em algumas versões)
+    # Request simples
     set {_response} to request {_url} with method "POST" and headers {_headers::*} and body {_body}
     set {_status} to response status of {_response}
     
     if {_status} is not 200:
         send "&c[Simplex] Erro ao registrar código de pareamento. Status: %{_status}%" to console
-        send "&c[Simplex] Verifique se o endereço da API em 'options' está correto e acessível pelo servidor." to console
+        send "&c[Simplex] Verifique se o endereço da API (%{simplex::api}%) está correto e acessível." to console
     
     send "&e[Simplex] =========================================" to console
     send "&e[Simplex] PAREAMENTO NECESSÁRIO" to console
@@ -74,7 +74,7 @@ every 5 seconds:
         set {_code} to {simplex::pairing_code}
         set {_url} to "%{simplex::api}%/connector/setup/poll?code=%{_code}%"
         
-        # Request simples sem try/catch
+        # Request simples
         set {_response} to request {_url} with method "GET"
         set {_status} to response status of {_response}
         
@@ -106,7 +106,6 @@ every 5 seconds:
                     send "&e[Simplex] Aguardando pareamento... Código: &b%{_code}%" to console
         else:
             # Silencioso para não spammar o console se backend estiver off
-            # send "&c[Simplex] Falha no polling (%{_status}%)." to console
             stop
 
 function simplex_request(method: text, endpoint: text, body: text = "") :: text:
