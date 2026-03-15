@@ -762,13 +762,17 @@ def _record_coupon_usage(conn, coupon_code, email, order_id):
     if not coupon_code:
         return
     
-    conn.execute("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?", (coupon_code,))
-    
-    if email:
-        conn.execute(
-            "INSERT INTO coupon_usage (coupon_code, customer_email, order_id, used_at) VALUES (?, ?, ?, ?)",
-            (coupon_code, email, order_id, now_iso())
-        )
+    try:
+        conn.execute("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?", (coupon_code,))
+        
+        if email:
+            conn.execute(
+                "INSERT INTO coupon_usage (coupon_code, customer_email, order_id, used_at) VALUES (?, ?, ?, ?)",
+                (coupon_code, email, order_id, now_iso())
+            )
+    except Exception as e:
+        logger.error(f"Failed to record coupon usage for {coupon_code}: {e}")
+        # Do not raise exception to avoid blocking the order
 
 @app.route('/payment/create', methods=['POST'])
 @app.route('/api/payment/create', methods=['POST'])
@@ -864,28 +868,32 @@ def create_pix_payment():
 
     # Handle 100% discount (Free Order)
     if final_amount <= 0:
-        free_id = f"free_{int(time.time() * 1000)}"
-        conn = get_db_connection()
-        conn.execute(
-            "INSERT INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at, coupon_code, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (free_id, nickname, email, cpf_clean, product_name, 0, "PAID", "PENDING", now_iso(), now_iso(), coupon_code, discount)
-        )
-        if discount > 0:
-            _record_coupon_usage(conn, coupon_code, email, free_id)
-        
-        # Trigger delivery immediately
-        delivered = deliver_vip_rcon(nickname, product_name)
-        delivery_status = "DELIVERED" if delivered else "PENDING"
-        conn.execute("UPDATE orders SET delivery_status = ?, updated_at = ? WHERE id = ?", (delivery_status, now_iso(), free_id))
-        
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            "success": True, 
-            "free": True, 
-            "message": "Cupom de 100% aplicado! VIP ativado com sucesso." if delivered else "Cupom de 100% aplicado! Ativação em processamento."
-        })
+        try:
+            free_id = f"free_{int(time.time() * 1000)}"
+            conn = get_db_connection()
+            conn.execute(
+                "INSERT INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at, coupon_code, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (free_id, nickname, email, cpf_clean, product_name, 0, "PAID", "PENDING", now_iso(), now_iso(), coupon_code, discount)
+            )
+            if discount > 0:
+                _record_coupon_usage(conn, coupon_code, email, free_id)
+            
+            # Trigger delivery immediately
+            delivered = deliver_vip_rcon(nickname, product_name)
+            delivery_status = "DELIVERED" if delivered else "PENDING"
+            conn.execute("UPDATE orders SET delivery_status = ?, updated_at = ? WHERE id = ?", (delivery_status, now_iso(), free_id))
+            
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                "success": True, 
+                "free": True, 
+                "message": "Cupom de 100% aplicado! VIP ativado com sucesso." if delivered else "Cupom de 100% aplicado! Ativação em processamento."
+            })
+        except Exception as e:
+            logger.exception("Error processing free order")
+            return jsonify({"error": "Erro ao processar pedido gratuito", "details": str(e)}), 500
 
     payload = {
         "amount": final_amount,
