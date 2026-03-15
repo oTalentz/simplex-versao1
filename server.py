@@ -60,7 +60,13 @@ CORS(app)
 
 @app.errorhandler(500)
 def internal_error(error):
-    return jsonify({"error": "Internal Server Error", "details": str(error)}), 500
+    # Log the full traceback
+    logger.error(f"Internal Server Error: {error}\n{traceback.format_exc()}")
+    return jsonify({
+        "error": "Internal Server Error",
+        "details": str(error),
+        "trace": traceback.format_exc()
+    }), 500
 
 @app.errorhandler(404)
 def not_found_error(error):
@@ -204,14 +210,26 @@ class TursoCursorWrapper:
 
 class TursoConnectionWrapper:
     def __init__(self, url, auth_token):
-        self.client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
+        # Create client inside a try block to catch connection errors immediately
+        try:
+            self.client = libsql_client.create_client_sync(url=url, auth_token=auth_token)
+        except Exception as e:
+            logger.error(f"Failed to create Turso client: {e}")
+            raise e
         self.row_factory = None  # Emulator placeholder
 
     def execute(self, sql, params=()):
         try:
+            # Ensure params is a tuple or list
+            if params is None:
+                params = ()
+            elif not isinstance(params, (list, tuple)):
+                params = (params,)
+                
             rs = self.client.execute(sql, params)
             return TursoCursorWrapper(rs)
         except Exception as e:
+            logger.error(f"Turso execute error: {e} | SQL: {sql} | Params: {params}")
             raise e
 
     def commit(self):
