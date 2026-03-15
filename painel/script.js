@@ -258,6 +258,9 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[DEBUG] Tentando login com:', loginUsername);
         console.log('[DEBUG] API_BASE_URL:', API_BASE_URL);
 
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
         try {
             let response;
             try {
@@ -265,12 +268,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 response = await fetch(`${API_BASE_URL}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: loginUsername, password: loginPassword })
+                    body: JSON.stringify({ username: loginUsername, password: loginPassword }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
                 console.log('[DEBUG] Fetch response:', response.status);
             } catch (err) {
+                if (err.name === 'AbortError') {
+                    throw new Error('Tempo limite excedido. O servidor demorou muito para responder.');
+                }
                 console.error('[DEBUG] Fetch error:', err);
-                throw new Error(`Backend offline ou inacessível em ${API_BASE_URL}. Verifique se o server.py está rodando ou se a URL da API está correta.`);
+                throw new Error(`Backend offline ou inacessível em ${API_BASE_URL}. Verifique conexão.`);
             }
             
             let data = {};

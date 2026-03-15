@@ -249,7 +249,12 @@ def init_db():
     conn.close()
 
 
-init_db()
+try:
+    init_db()
+except Exception as e:
+    logger.error(f"Failed to initialize database: {e}")
+    # Continue running app, but database operations will fail
+    pass
 
 
 def audit(actor, action, status, metadata=None):
