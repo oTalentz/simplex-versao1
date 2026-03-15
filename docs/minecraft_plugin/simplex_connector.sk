@@ -96,6 +96,11 @@ every 5 seconds:
                 
                 delete {simplex::pairing_active}
                 delete {simplex::pairing_code}
+                
+            else if {_content} contains "EXPIRED":
+                send "&c[Simplex] Código expirado. Gerando novo..." to console
+                simplex_start_pairing()
+                
             else:
                 # Anuncia a cada ~30s (1 em 6 loops)
                 if {simplex::announce_tick} is not set:
@@ -142,7 +147,7 @@ function simplex_execute_cmd(cmd: text, player: text):
     replace all "%%player%%" in {_final_cmd} with {_player}
     execute console command {_final_cmd}
 
-every 30 seconds:
+every 15 seconds:
     if {simplex::token} is set:
         # Heartbeat
         set {_hb_body} to "{""type"":""heartbeat"",""payload"":{""agent"":""%{simplex::agent}%"",""online"":%number of all players%}}"
@@ -154,6 +159,10 @@ every 30 seconds:
             send "&c[Simplex] Falha ao enviar Heartbeat (Verifique a API)." to console
         else:
             send "&a[Simplex] Heartbeat enviado. Jogadores: %number of all players%" to console
+    else:
+        # Debug para saber se o loop está rodando mas o token está faltando
+        if {simplex::pairing_active} is not set:
+            send "&e[Simplex] Loop de heartbeat ativo, mas token não configurado. Use /simplex setup ou reinicie." to console
         
         # Check deliveries
         set {_res} to simplex_request("GET", "/connector/deliveries")

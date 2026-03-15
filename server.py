@@ -674,7 +674,7 @@ def connector_setup_poll():
         return jsonify({"error": "Missing code"}), 400
 
     conn = get_db_connection()
-    row = conn.execute("SELECT status, token FROM pairing_codes WHERE code = ?", (code,)).fetchone()
+    row = conn.execute("SELECT status, token, created_at FROM pairing_codes WHERE code = ?", (code,)).fetchone()
     conn.close()
 
     if not row:
@@ -682,6 +682,19 @@ def connector_setup_poll():
 
     if row["status"] == "CLAIMED":
         return jsonify({"status": "CLAIMED", "token": row["token"]})
+
+    # Check expiration (10 minutes)
+    try:
+        created_at = datetime.datetime.fromisoformat(row["created_at"])
+        # Ensure timezone awareness compatibility
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=datetime.timezone.utc)
+        
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if (now - created_at).total_seconds() > 600: # 10 minutes
+            return jsonify({"status": "EXPIRED"}), 200
+    except Exception:
+        pass # If date parsing fails, assume valid
 
     return jsonify({"status": "PENDING"})
 
