@@ -1,6 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const isLocalRuntime = window.location.protocol === 'file:' || !window.location.hostname || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const API_BASE_URL = isLocalRuntime ? 'http://localhost:5000' : '/api';
+    // Melhor detecção de ambiente
+    const hostname = window.location.hostname;
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.');
+    // Se estiver rodando localmente (file: ou localhost), usa a porta 5000.
+    // Caso contrário (Vercel ou outro host), assume que a API está em /api (mesmo domínio)
+    const API_BASE_URL = isLocalhost || window.location.protocol === 'file:' ? 'http://localhost:5000' : '/api';
     const refreshBtn = document.getElementById('btn-refresh');
     const timeFilter = document.getElementById('time-filter');
     const authGate = document.getElementById('auth-gate');
@@ -611,9 +615,9 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         
         window.deleteCoupon = async (code) => {
-            if (!confirm(\`Tem certeza que deseja excluir o cupom "\${code}"?\`)) return;
+            if (!confirm(`Tem certeza que deseja excluir o cupom "${code}"?`)) return;
             try {
-                await apiFetch(\`/admin/coupons/\${code}\`, { method: 'DELETE' });
+                await apiFetch(`/admin/coupons/${code}`, { method: 'DELETE' });
                 fetchCoupons();
             } catch (error) {
                 alert('Erro ao excluir: ' + error.message);
@@ -916,7 +920,8 @@ document.addEventListener('DOMContentLoaded', () => {
         // Import/Export
         if (btnExport) {
             btnExport.addEventListener('click', () => {
-                window.open(\`\${API_BASE_URL}/admin/coupons/export?token=\${token}\`, '_blank');
+                const token = localStorage.getItem('simplex_admin_token') || '';
+                window.open(`${API_BASE_URL}/admin/coupons/export?token=${token}`, '_blank');
             });
         }
         
@@ -951,10 +956,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     // But fetch with FormData automatically sets Content-Type to multipart/form-data with boundary.
                     // So we should NOT set Content-Type header manually.
                     
-                    const response = await fetch(\`\${API_BASE_URL}/admin/coupons/import\`, {
+                    const response = await fetch(`${API_BASE_URL}/admin/coupons/import`, {
                         method: 'POST',
                         headers: {
-                            'Authorization': \`Bearer \${token}\`
+                            'Authorization': `Bearer ${token}`
                         },
                         body: formData
                     });
@@ -965,7 +970,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                     
                     const result = await response.json();
-                    alert(\`Importação concluída! Sucesso: \${result.success_count}, Erros: \${result.error_count}\`);
+                    alert(`Importação concluída! Sucesso: ${result.success_count}, Erros: ${result.error_count}`);
                     fetchCoupons();
                     fileImport.value = ''; // Reset
                 } catch (error) {

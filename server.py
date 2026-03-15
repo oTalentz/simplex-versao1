@@ -82,7 +82,36 @@ def not_found_error(error):
     return jsonify({"error": "Not Found"}), 404
 
 
-@app.route('/debug-db', methods=['GET'])
+@app.route("/api/health", methods=['GET'])
+def health_check():
+    status = {
+        "status": "online",
+        "timestamp": now_iso(),
+        "environment": "vercel" if os.getenv("VERCEL") else "local",
+        "database": "turso" if USE_TURSO else "sqlite"
+    }
+    
+    # Check DB connection
+    try:
+        conn = get_db_connection()
+        conn.execute("SELECT 1").fetchone()
+        conn.close()
+        status["db_connection"] = "ok"
+    except Exception as e:
+        status["db_connection"] = "error"
+        status["db_error"] = str(e)
+        return jsonify(status), 500
+
+    if os.getenv("VERCEL") and not USE_TURSO:
+        status["warning"] = "Running on Vercel with ephemeral SQLite database! Data will be lost on restart."
+
+    if os.getenv("VERCEL") and JWT_SECRET == "simplex_dev_secret_change_me":
+        status["security_warning"] = "JWT_SECRET is using the default value! Please set a secure random secret."
+
+    return jsonify(status)
+
+
+@app.route("/api/debug-db", methods=['GET'])
 def debug_db():
     try:
         conn = get_db_connection()
@@ -568,12 +597,12 @@ def _mc_online_state(heartbeat_at):
     return "offline"
 
 
-@app.route("/")
+@app.route("/api/")
 def home():
     return jsonify({"status": "ok", "service": "Simplex Payment API"})
 
 
-@app.route("/auth/login", methods=["POST"])
+@app.route("/api/auth/login", methods=["POST"])
 def auth_login():
     try:
         data, err = require_json()
@@ -614,7 +643,7 @@ def auth_login():
         return jsonify({"error": "Internal Server Error", "details": traceback.format_exc()}), 500
 
 
-@app.route("/auth/me", methods=["GET"])
+@app.route("/api/auth/me", methods=["GET"])
 @require_auth
 def auth_me():
     return jsonify({"username": g.user.get("sub"), "role": g.user.get("role")})
@@ -735,7 +764,7 @@ def _record_coupon_usage(conn, coupon_code, email, order_id):
             (coupon_code, email, order_id, now_iso())
         )
 
-@app.route('/create-payment', methods=['POST'])
+@app.route('/api/payment/create', methods=['POST'])
 def create_payment():
     req_id = int(time.time() * 1000)
     data, err = require_json()
@@ -802,7 +831,7 @@ def create_payment():
         return jsonify({"error": "Internal Server Error"}), 500
 
 
-@app.route('/create-pix-payment', methods=['POST'])
+@app.route('/api/payment/create-pix', methods=['POST'])
 def create_pix_payment():
     data, err = require_json()
     if err:
@@ -848,7 +877,7 @@ def create_pix_payment():
     return jsonify({"brCode": data_obj.get("brCode"), "brCodeBase64": data_obj.get("brCodeBase64"), "pixId": pix_id})
 
 
-@app.route('/webhook/abacate', methods=['POST'])
+@app.route('/api/webhooks/abacate', methods=['POST'])
 def abacate_webhook():
     if WEBHOOK_SHARED_SECRET:
         provided = request.headers.get("X-Webhook-Token", "")
@@ -945,7 +974,7 @@ def _status_payload():
     return payload
 
 
-@app.route('/admin/stats', methods=['GET'])
+@app.route('/api/admin/stats', methods=['GET'])
 @require_auth
 def admin_stats():
     days = int(request.args.get("days", "30"))
@@ -953,14 +982,14 @@ def admin_stats():
     return jsonify(_stats_payload(days))
 
 
-@app.route('/admin/status', methods=['GET'])
+@app.route('/api/admin/status', methods=['GET'])
 @require_auth
 def admin_status():
     audit(g.user.get("sub"), "admin_status", "success")
     return jsonify(_status_payload())
 
 
-@app.route('/admin/audit', methods=['GET'])
+@app.route('/api/admin/audit', methods=['GET'])
 @require_auth
 def admin_audit():
     limit = min(int(request.args.get("limit", "100")), 300)
@@ -970,7 +999,7 @@ def admin_audit():
     return jsonify({"logs": [dict(row) for row in rows]})
 
 
-@app.route('/connector/events', methods=['POST'])
+@app.route('/api/connector/events', methods=['POST'])
 @require_auth
 def connector_events():
     data, err = require_json()
@@ -1002,7 +1031,7 @@ def connector_events():
     return jsonify({"success": True})
 
 
-@app.route('/connector/setup/init', methods=['POST'])
+@app.route('/api/connector/setup/init', methods=['POST'])
 def connector_setup_init():
     data, err = require_json()
     if err:
@@ -1028,7 +1057,7 @@ def connector_setup_init():
     return jsonify({"status": "PENDING"})
 
 
-@app.route('/connector/setup/poll', methods=['GET'])
+@app.route('/api/connector/setup/poll', methods=['GET'])
 def connector_setup_poll():
     code = request.args.get("code", "").strip().upper()
     if not code:
@@ -1060,7 +1089,7 @@ def connector_setup_poll():
     return jsonify({"status": "PENDING"})
 
 
-@app.route('/admin/connector/claim', methods=['POST'])
+@app.route('/api/admin/connector/claim', methods=['POST'])
 @require_auth
 def admin_claim_connector():
     if g.user.get("role") != "superadmin":
@@ -1096,7 +1125,7 @@ def admin_claim_connector():
     return jsonify({"success": True, "agent": agent_name, "token": token})
 
 
-@app.route('/admin/connector/disconnect', methods=['POST'])
+@app.route('/api/admin/connector/disconnect', methods=['POST'])
 @require_auth
 def admin_connector_disconnect():
     # Revoke active token logic
