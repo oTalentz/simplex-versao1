@@ -118,8 +118,18 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupForm(modalContext) {
         const nicknameInput = modalContext.querySelector('.nickname-input');
         const emailInput = modalContext.querySelector('.email-input');
-        const cpfInput = modalContext.querySelector('.cpf-input');
+        // CPF Removed
         // Cellphone removed
+        
+        // Coupon Elements
+        const couponInput = modalContext.querySelector('.coupon-input');
+        const btnApplyCoupon = modalContext.querySelector('.btn-apply-coupon');
+        const couponFeedback = modalContext.querySelector('.coupon-feedback');
+        const priceSummary = modalContext.querySelector('.price-summary');
+        const summaryOriginal = modalContext.querySelector('.summary-original-price');
+        const summaryDiscount = modalContext.querySelector('.summary-discount');
+        const summaryTotal = modalContext.querySelector('.summary-total');
+
         // Update selector to include origin-btn
         const buyButton = modalContext.querySelector('.btn-buy-footer');
         const form = modalContext.querySelector('.purchase-form');
@@ -146,20 +156,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const nickFeedback = createFeedback(nicknameInput, 'nick-feedback');
         const emailFeedback = emailInput ? createFeedback(emailInput, 'email-feedback') : null;
-        const cpfFeedback = cpfInput ? createFeedback(cpfInput, 'cpf-feedback') : null;
+        // CPF Feedback Removed
 
         // Validation State
         const validationState = {
             nick: false,
             email: false,
-            cpf: false,
+            // CPF Removed
             paymentMethod: false
         };
 
         const updateButtonState = () => {
             const isValid = validationState.nick &&
                 (!emailInput || validationState.email) &&
-                (!cpfInput || validationState.cpf) &&
                 validationState.paymentMethod;
             buyButton.disabled = !isValid;
         };
@@ -242,30 +251,54 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // CPF Validation
-        if (cpfInput) {
-            cpfInput.addEventListener('input', () => {
-                let value = cpfInput.value.replace(/\D/g, ''); // Remove non-digits
-                if (value.length > 11) value = value.slice(0, 11);
-                cpfInput.value = value;
+        // CPF Validation Removed
+        
+        // Coupon Logic
+        if (btnApplyCoupon && couponInput) {
+            btnApplyCoupon.addEventListener('click', async () => {
+                const code = couponInput.value.trim();
+                if (!code) return;
 
-                const isValid = value.length === 11;
+                const kitNameEl = modalContext.querySelector('.kit-title-modal');
+                const kitName = kitNameEl ? (kitNameEl.getAttribute('data-product') || kitNameEl.innerText.replace('KIT ', '')) : 'VIP';
 
-                cpfInput.classList.remove('valid', 'invalid');
-                cpfFeedback.textContent = '';
+                const originalBtnText = btnApplyCoupon.textContent;
+                btnApplyCoupon.textContent = '...';
+                btnApplyCoupon.disabled = true;
 
-                if (isValid) {
-                    cpfInput.classList.add('valid');
-                    validationState.cpf = true;
-                } else {
-                    if (value.length > 0) {
-                        cpfInput.classList.add('invalid');
-                        cpfFeedback.textContent = 'CPF deve ter 11 dígitos';
-                        cpfFeedback.style.color = '#e74c3c';
+                try {
+                    const response = await fetch(`${API_BASE_URL}/validate-coupon`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ code, product: kitName })
+                    });
+                    
+                    const data = await response.json();
+
+                    if (data.valid) {
+                        couponFeedback.textContent = data.message;
+                        couponFeedback.style.color = '#27ae60';
+                        
+                        // Update Price Summary
+                        if (priceSummary) {
+                            priceSummary.style.display = 'block';
+                            summaryOriginal.textContent = `R$ ${(data.original_price / 100).toFixed(2).replace('.', ',')}`;
+                            summaryDiscount.textContent = `- R$ ${(data.discount_amount / 100).toFixed(2).replace('.', ',')}`;
+                            summaryTotal.textContent = `R$ ${(data.final_price / 100).toFixed(2).replace('.', ',')}`;
+                        }
+                    } else {
+                        couponFeedback.textContent = data.message || 'Cupom inválido';
+                        couponFeedback.style.color = '#e74c3c';
+                        if (priceSummary) priceSummary.style.display = 'none';
                     }
-                    validationState.cpf = false;
+                } catch (err) {
+                    console.error(err);
+                    couponFeedback.textContent = 'Erro ao validar cupom';
+                    couponFeedback.style.color = '#e74c3c';
+                } finally {
+                    btnApplyCoupon.textContent = originalBtnText;
+                    btnApplyCoupon.disabled = false;
                 }
-                updateButtonState();
             });
         }
 
@@ -378,11 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const nickname = nicknameInput.value.trim();
             const email = emailInput ? emailInput.value.trim() : '';
-            const cpf = cpfInput ? cpfInput.value.trim() : '';
-            // Cellphone removed
+            // CPF removed from collection
+            
             const kitNameEl = modalContext.querySelector('.kit-title-modal');
             // Use data-product attribute if available, otherwise fallback to parsing text
             const kitName = kitNameEl ? (kitNameEl.getAttribute('data-product') || kitNameEl.innerText.replace('KIT ', '')) : 'VIP';
+            
+            const couponCode = couponInput ? couponInput.value.trim() : '';
 
             const originalText = buyButton.textContent;
             buyButton.textContent = 'GERANDO PIX...';
@@ -400,8 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({
                         nickname,
                         email,
-                        cpf,
-                        product: kitName
+                        product: kitName,
+                        coupon: couponCode
                     })
                 });
 

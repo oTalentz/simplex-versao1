@@ -78,6 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (view.id === `view-${target}`) {
                         view.classList.remove('hidden');
                         view.style.display = 'block'; // Ensure visibility
+                        if (target === 'coupons') {
+                            fetchCoupons();
+                        }
                     } else {
                         view.classList.add('hidden');
                         view.style.display = 'none'; // Ensure hidden
@@ -505,10 +508,619 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setSessionUserLabel();
     setupDashboardInteractions();
+    setupCouponInteractions();
+    setupHistoryInteractions();
     validateSession().then(async (ok) => {
         if (ok) {
             await fetchStatus();
             await fetchStats();
         }
     });
+    // End of validateSession
+
+    async function fetchCoupons() {
+        try {
+            const data = await apiFetch('/admin/coupons');
+            const coupons = data.coupons || data || []; // Handle list or dict response
+            // Sometimes apiFetch returns object, sometimes array depending on endpoint wrapper
+            // If endpoint returns list directly:
+            const list = Array.isArray(data) ? data : (data.coupons || []);
+            
+            window.allCoupons = list; // Cache for validation
+            renderCouponsTable(list);
+            
+            // Also fetch stats to update the cards
+            loadCouponStats();
+        } catch (error) {
+            console.error('Erro ao buscar cupons:', error);
+            // alert('Erro ao buscar cupons: ' + error.message);
+        }
+    }
+
+    async function loadCouponStats() {
+        try {
+            const data = await apiFetch('/admin/coupons/stats');
+            
+            // Update cards
+            const elActive = document.getElementById('stats-active-coupons');
+            const elUses = document.getElementById('stats-total-uses');
+            const elDiscount = document.getElementById('stats-total-discount');
+            
+            if (elActive) elActive.textContent = data.active_coupons;
+            if (elUses) elUses.textContent = data.total_uses;
+            if (elDiscount) elDiscount.textContent = formatCurrency(data.total_discount_given / 100);
+            
+            // Update Top 5 Table in Modal
+            const tbody = document.getElementById('top-coupons-body');
+            if (tbody) {
+                tbody.innerHTML = '';
+                if (data.top_coupons && data.top_coupons.length > 0) {
+                    data.top_coupons.forEach(c => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><span style="font-family: monospace; font-weight: bold; color: var(--accent-gold);">${c.code}</span></td>
+                            <td>${c.used_count}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="2" class="text-center">Nenhum dado disponível.</td></tr>';
+                }
+            }
+        } catch (error) {
+            console.error('Erro ao carregar estatísticas:', error);
+        }
+    }
+
+    function renderCouponsTable(coupons) {
+        const tbody = document.getElementById('coupons-table-body');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (!coupons.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center">Nenhum cupom encontrado.</td></tr>';
+            return;
+        }
+
+        coupons.forEach(coupon => {
+            const tr = document.createElement('tr');
+            const isExpired = coupon.expires_at && new Date(coupon.expires_at) < new Date();
+            const statusClass = (coupon.status === 'ACTIVE' && !isExpired) ? 'badge-delivered' : 'badge-failed';
+            const statusText = isExpired ? 'Expirado' : (coupon.status === 'ACTIVE' ? 'Ativo' : 'Inativo');
+            
+            tr.innerHTML = `
+                <td><span style="font-family: monospace; font-weight: bold; color: var(--accent-gold);">${coupon.code}</span></td>
+                <td>${coupon.discount_type === 'PERCENT' ? 'Porcentagem' : 'Fixo'}</td>
+                <td>${coupon.discount_type === 'PERCENT' ? coupon.discount_value + '%' : formatCurrency(coupon.discount_value / 100)}</td>
+                <td>${coupon.used_count} / ${coupon.max_uses === -1 ? '∞' : coupon.max_uses}</td>
+                <td>${formatDate(coupon.expires_at) || 'Nunca'}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn-icon-small" onclick="editCoupon('${coupon.code}')" title="Editar"><i class="fas fa-edit"></i></button>
+                    <button class="btn-icon-small" onclick="viewCouponHistory('${coupon.code}')" title="Histórico"><i class="fas fa-history"></i></button>
+                    <button class="btn-icon-small danger" onclick="deleteCoupon('${coupon.code}')" title="Excluir"><i class="fas fa-trash"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+        
+        // Add global functions for inline onclick handlers
+        window.editCoupon = (code) => {
+            const coupon = coupons.find(c => c.code === code);
+            if (coupon) openCouponModal(coupon);
+        };
+        
+        window.deleteCoupon = async (code) => {
+            if (!confirm(\`Tem certeza que deseja excluir o cupom "\${code}"?\`)) return;
+            try {
+                await apiFetch(\`/admin/coupons/\${code}\`, { method: 'DELETE' });
+                fetchCoupons();
+            } catch (error) {
+                alert('Erro ao excluir: ' + error.message);
+            }
+        };
+    }
+
+    function updateCouponStats(coupons) {
+        const total = coupons.length;
+        const active = coupons.filter(c => c.status === 'ACTIVE' && (!c.expires_at || new Date(c.expires_at) > new Date())).length;
+        
+        const elTotal = document.getElementById('stats-total-coupons');
+        const elActive = document.getElementById('stats-active-coupons');
+        
+        if (elTotal) elTotal.textContent = total;
+        if (elActive) elActive.textContent = active;
+    }
+
+    function setupCouponInteractions() {
+        const modal = document.getElementById('coupon-modal');
+        const btnNew = document.getElementById('btn-new-coupon');
+        const btnClose = document.getElementById('btn-close-coupon-modal');
+        const btnGenCode = document.getElementById('btn-generate-code');
+        const form = document.getElementById('coupon-form');
+        const btnPrev = document.getElementById('btn-prev-step');
+        const btnNext = document.getElementById('btn-next-step');
+        const btnSave = document.getElementById('btn-save-coupon');
+        const btnImport = document.getElementById('btn-import-coupons');
+        const btnExport = document.getElementById('btn-export-coupons');
+        const fileImport = document.getElementById('file-import-coupons');
+        
+        // --- Stats Modal Logic ---
+        const btnStats = document.getElementById('btn-coupon-stats');
+        const statsModal = document.getElementById('coupon-stats-modal');
+        const btnCloseStats = document.getElementById('btn-close-stats-modal');
+
+        if (btnStats) {
+            btnStats.addEventListener('click', async () => {
+                if (statsModal) {
+                    statsModal.style.display = 'flex';
+                    statsModal.classList.remove('hidden');
+                    // Force fetch fresh stats
+                    await loadCouponStats();
+                }
+            });
+        }
+
+        if (btnCloseStats) {
+            btnCloseStats.addEventListener('click', () => {
+                if (statsModal) {
+                    statsModal.style.display = 'none';
+                    statsModal.classList.add('hidden');
+                }
+            });
+        }
+        
+        // --- Template & Validation Logic ---
+        const templateSelect = document.getElementById('coupon-template');
+        const feedbackEl = document.getElementById('coupon-code-feedback');
+        
+        function validateCode() {
+            const codeInput = document.getElementById('coupon-code');
+            if (!feedbackEl || !codeInput) return;
+            
+            // If creating new, check duplicates. If editing, code is readonly.
+            if (codeInput.readOnly) {
+                feedbackEl.textContent = '';
+                return;
+            }
+
+            const code = codeInput.value.trim().toUpperCase();
+            
+            if (code.length === 0) {
+                feedbackEl.textContent = '';
+                return;
+            }
+            
+            if (code.length < 3) {
+                feedbackEl.textContent = 'Muito curto (min 3)';
+                feedbackEl.style.color = '#ff4444'; // Red
+                return;
+            }
+            
+            if (/\s/.test(code)) {
+                feedbackEl.textContent = 'Sem espaços!';
+                feedbackEl.style.color = '#ff4444';
+                return;
+            }
+            
+            const exists = (window.allCoupons || []).some(c => c.code === code);
+            if (exists) {
+                feedbackEl.textContent = 'Código já existe!';
+                feedbackEl.style.color = '#ff4444';
+            } else {
+                feedbackEl.textContent = 'Disponível ✓';
+                feedbackEl.style.color = '#00C851'; // Green
+            }
+        }
+
+        if (templateSelect) {
+            templateSelect.addEventListener('change', () => {
+                const val = templateSelect.value;
+                if (!val) return;
+                
+                const codeInput = document.getElementById('coupon-code');
+                const typeInput = document.getElementById('coupon-type');
+                const valueInput = document.getElementById('coupon-value');
+                const maxUsesInput = document.getElementById('coupon-max-uses');
+                const statusInput = document.getElementById('coupon-status');
+                const minCartInput = document.getElementById('coupon-min-cart');
+
+                // Clear previous validation
+                if (feedbackEl) feedbackEl.textContent = '';
+                
+                if (val === 'WELCOME') {
+                    codeInput.value = 'BEMVINDO10';
+                    typeInput.value = 'PERCENT';
+                    valueInput.value = 10;
+                    maxUsesInput.value = 1;
+                    statusInput.value = 'ACTIVE';
+                    minCartInput.value = 0;
+                } else if (val === 'BLACKFRIDAY') {
+                    codeInput.value = 'BLACKFRIDAY';
+                    typeInput.value = 'PERCENT';
+                    valueInput.value = 50;
+                    maxUsesInput.value = -1;
+                    statusInput.value = 'ACTIVE';
+                    minCartInput.value = 0;
+                } else if (val === 'FIXED10') {
+                    codeInput.value = 'DESCONTO10';
+                    typeInput.value = 'FIXED';
+                    valueInput.value = 10;
+                    maxUsesInput.value = -1;
+                    statusInput.value = 'ACTIVE';
+                    minCartInput.value = 50; // Example min cart
+                } else if (val === 'FIXED50') {
+                    codeInput.value = 'DESCONTO50';
+                    typeInput.value = 'FIXED';
+                    valueInput.value = 50;
+                    maxUsesInput.value = -1;
+                    statusInput.value = 'ACTIVE';
+                    minCartInput.value = 100;
+                }
+                validateCode();
+            });
+        }
+        
+        const codeInputRef = document.getElementById('coupon-code');
+        if (codeInputRef) {
+            codeInputRef.addEventListener('input', validateCode);
+            codeInputRef.addEventListener('blur', validateCode);
+        }
+        // --- End Template Logic ---
+
+        
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function updateWizardUI() {
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.wizard-pane').forEach(p => {
+                p.classList.add('hidden');
+                p.style.display = 'none';
+            });
+            
+            const currentPane = document.querySelector(`.wizard-pane[data-step="\${currentStep}"]`);
+            if (currentPane) {
+                currentPane.classList.remove('hidden');
+                currentPane.style.display = 'block';
+            }
+            
+            const currentStepIndicator = document.querySelector(`.step[data-step="\${currentStep}"]`);
+            if (currentStepIndicator) currentStepIndicator.classList.add('active'); // Add active class style logic if needed
+            
+            // Update buttons
+            btnPrev.disabled = currentStep === 1;
+            if (currentStep === totalSteps) {
+                btnNext.style.display = 'none';
+                btnSave.style.display = 'inline-block';
+                btnSave.classList.remove('hidden');
+            } else {
+                btnNext.style.display = 'inline-block';
+                btnSave.style.display = 'none';
+                btnSave.classList.add('hidden');
+            }
+            
+            // Update step indicators style
+            document.querySelectorAll('.step').forEach(step => {
+                const stepNum = parseInt(step.getAttribute('data-step'));
+                if (stepNum === currentStep) {
+                    step.style.color = 'var(--accent-gold)';
+                    step.style.fontWeight = 'bold';
+                } else {
+                    step.style.color = 'var(--text-secondary)';
+                    step.style.fontWeight = 'normal';
+                }
+            });
+        }
+
+        if (btnNew) {
+            btnNew.addEventListener('click', () => {
+                openCouponModal();
+            });
+        }
+
+        if (btnClose) {
+            btnClose.addEventListener('click', () => {
+                modal.style.display = 'none';
+                modal.classList.add('hidden');
+            });
+        }
+
+        if (btnGenCode) {
+            btnGenCode.addEventListener('click', () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let result = '';
+                for (let i = 0; i < 8; i++) {
+                    result += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                document.getElementById('coupon-code').value = result;
+            });
+        }
+
+        if (btnPrev) {
+            btnPrev.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    currentStep--;
+                    updateWizardUI();
+                }
+            });
+        }
+
+        if (btnNext) {
+            btnNext.addEventListener('click', () => {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateWizardUI();
+                }
+            });
+        }
+        
+        if (form) {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData(form);
+                const payload = {
+                    code: formData.get('code'),
+                    discount_type: formData.get('discount_type'),
+                    discount_value: parseInt(formData.get('discount_value')),
+                    min_cart_value: parseFloat(formData.get('min_cart_value') || 0) * 100, // Convert to cents if needed, but backend expects cents? let's check backend
+                    status: formData.get('status'),
+                    expires_at: formData.get('expires_at') || null,
+                    max_uses: parseInt(formData.get('max_uses') || -1)
+                };
+                
+                // Backend expects discount_value as integer. If type is FIXED, it might be in cents or raw value.
+                // Let's assume FIXED is in BRL and needs conversion to cents, or just raw value.
+                // Looking at server.py: discount_value INTEGER DEFAULT 0, -- percent or fixed amount in cents
+                // So if FIXED, we should multiply by 100 if the input is in BRL.
+                if (payload.discount_type === 'FIXED') {
+                     // The input is type="number", user likely types 10 for R$ 10.00
+                     // We should convert to cents.
+                     payload.discount_value = Math.round(payload.discount_value * 100);
+                }
+                
+                // min_cart_value is also in cents in backend?
+                // server.py: min_cart_value INTEGER DEFAULT 0
+                // Yes, consistent with other monetary values.
+                payload.min_cart_value = Math.round(parseFloat(formData.get('min_cart_value') || 0) * 100);
+
+                const btnText = btnSave.textContent;
+                btnSave.textContent = 'Salvando...';
+                btnSave.disabled = true;
+
+                try {
+                    const isEdit = form.dataset.mode === 'edit';
+                    const url = isEdit ? `/admin/coupons/${form.dataset.code}` : '/admin/coupons';
+                    const method = isEdit ? 'PUT' : 'POST';
+
+                    await apiFetch(url, {
+                        method: method,
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    modal.style.display = 'none';
+                    modal.classList.add('hidden');
+                    fetchCoupons();
+                    alert('Cupom salvo com sucesso!');
+                } catch (error) {
+                    alert('Erro ao salvar cupom: ' + error.message);
+                } finally {
+                    btnSave.textContent = btnText;
+                    btnSave.disabled = false;
+                }
+            });
+        }
+        
+        // Import/Export
+        if (btnExport) {
+            btnExport.addEventListener('click', () => {
+                window.open(\`\${API_BASE_URL}/admin/coupons/export?token=\${token}\`, '_blank');
+            });
+        }
+        
+        if (btnImport && fileImport) {
+            btnImport.addEventListener('click', () => fileImport.click());
+            
+            fileImport.addEventListener('change', async () => {
+                if (!fileImport.files.length) return;
+                
+                const file = fileImport.files[0];
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                const btnText = btnImport.innerHTML;
+                btnImport.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+                btnImport.disabled = true;
+                
+                try {
+                    // Note: apiFetch wrapper handles JSON responses, but for file upload we need specific handling if not JSON
+                    // But our apiFetch sets Content-Type to application/json automatically if not specified? 
+                    // Wait, apiFetch implementation:
+                    /*
+                    const fetchOptions = {
+                        ...options,
+                        headers: {
+                            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                            ...(options.headers || {})
+                        }
+                    };
+                    */
+                    // It doesn't force Content-Type unless we pass it.
+                    // But fetch with FormData automatically sets Content-Type to multipart/form-data with boundary.
+                    // So we should NOT set Content-Type header manually.
+                    
+                    const response = await fetch(\`\${API_BASE_URL}/admin/coupons/import\`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': \`Bearer \${token}\`
+                        },
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || 'Erro na importação');
+                    }
+                    
+                    const result = await response.json();
+                    alert(\`Importação concluída! Sucesso: \${result.success_count}, Erros: \${result.error_count}\`);
+                    fetchCoupons();
+                    fileImport.value = ''; // Reset
+                } catch (error) {
+                    alert('Erro ao importar: ' + error.message);
+                } finally {
+                    btnImport.innerHTML = btnText;
+                    btnImport.disabled = false;
+                }
+            });
+        }
+        
+        window.openCouponModal = (coupon = null) => {
+            currentStep = 1;
+            updateWizardUI();
+            
+            const title = document.getElementById('coupon-modal-title');
+            if (coupon) {
+                form.dataset.mode = 'edit';
+                form.dataset.code = coupon.code;
+                title.textContent = 'Editar Cupom';
+                document.getElementById('coupon-code').value = coupon.code;
+                document.getElementById('coupon-code').readOnly = true; // Cannot change code on edit usually
+                document.getElementById('coupon-type').value = coupon.discount_type;
+                
+                // Convert cents to unit for display
+                const val = coupon.discount_type === 'PERCENT' ? coupon.discount_value : coupon.discount_value / 100;
+                document.getElementById('coupon-value').value = val;
+                
+                document.getElementById('coupon-min-cart').value = coupon.min_cart_value / 100;
+                document.getElementById('coupon-status').value = coupon.status;
+                document.getElementById('coupon-expires').value = coupon.expires_at ? coupon.expires_at.slice(0, 16) : '';
+                document.getElementById('coupon-max-uses').value = coupon.max_uses;
+            } else {
+                form.dataset.mode = 'create';
+                delete form.dataset.code;
+                title.textContent = 'Novo Cupom';
+                form.reset();
+                document.getElementById('coupon-code').readOnly = false;
+                document.getElementById('coupon-max-uses').value = -1;
+                document.getElementById('coupon-min-cart').value = 0;
+            }
+            
+            modal.style.display = 'flex';
+            modal.classList.remove('hidden');
+        };
+    }
+
+    function setupHistoryInteractions() {
+        const historyModal = document.getElementById('coupon-history-modal');
+        const btnCloseHistory = document.getElementById('btn-close-history-modal');
+        const historyTitle = document.getElementById('history-modal-title');
+        const historyBody = document.getElementById('history-table-body');
+
+        if (btnCloseHistory) {
+            btnCloseHistory.addEventListener('click', () => {
+                historyModal.style.display = 'none';
+                historyModal.classList.add('hidden');
+            });
+        }
+
+        window.viewCouponHistory = async (code) => {
+            historyTitle.textContent = `Histórico: ${code}`;
+            historyBody.innerHTML = '<tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Carregando...</td></tr>';
+            
+            historyModal.style.display = 'flex';
+            historyModal.classList.remove('hidden');
+
+            try {
+                const logs = await apiFetch(`/admin/coupons/${code}/logs`);
+                renderHistoryTable(logs);
+            } catch (error) {
+                historyBody.innerHTML = `<tr><td colspan="4" class="text-center error">Erro: ${error.message}</td></tr>`;
+            }
+        };
+
+        function renderHistoryTable(logs) {
+            historyBody.innerHTML = '';
+            
+            if (!logs || !logs.length) {
+                historyBody.innerHTML = '<tr><td colspan="4" class="text-center">Nenhum registro encontrado.</td></tr>';
+                return;
+            }
+
+            logs.forEach(log => {
+                const tr = document.createElement('tr');
+                let details = log.details;
+                let detailsHtml = '';
+
+                try {
+                    if (typeof details === 'string') {
+                        details = JSON.parse(details);
+                    }
+                } catch (e) {
+                    // details is raw string
+                }
+
+                if (log.action === 'CREATE') {
+                    detailsHtml = '<span class="text-success">Criação do cupom</span>';
+                } else if (log.action === 'IMPORT') {
+                    detailsHtml = '<span class="text-info">Importado via CSV</span>';
+                } else if (log.action === 'UPDATE' && typeof details === 'object') {
+                    detailsHtml = '<ul style="list-style: none; padding: 0; margin: 0; font-size: 0.85em;">';
+                    let hasChanges = false;
+                    
+                    const keyMap = {
+                        'code': 'Código',
+                        'discount_type': 'Tipo de Desconto',
+                        'discount_value': 'Valor do Desconto',
+                        'min_cart_value': 'Valor Mínimo do Carrinho',
+                        'max_uses': 'Limite de Usos',
+                        'expires_at': 'Expira em',
+                        'status': 'Status'
+                    };
+
+                    for (const [key, val] of Object.entries(details)) {
+                         if (key === 'updated_at' || key === 'created_at') continue;
+                         
+                         let displayKey = keyMap[key] || key;
+                         let displayVal = val;
+
+                         if (key === 'min_cart_value') {
+                             displayVal = formatCurrency(val / 100);
+                         } else if (key === 'expires_at') {
+                             displayVal = val ? formatDate(val) : 'Nunca';
+                         } else if (key === 'discount_type') {
+                             displayVal = val === 'PERCENT' ? 'Porcentagem' : 'Fixo';
+                         } else if (key === 'status') {
+                             displayVal = val === 'ACTIVE' ? 'Ativo' : 'Inativo';
+                         } else if (key === 'discount_value') {
+                            // Try to infer context or just show raw
+                            displayVal = val; 
+                         } else if (key === 'max_uses') {
+                            displayVal = val === -1 ? 'Infinito' : val;
+                         }
+
+                         detailsHtml += `<li><b>${displayKey}:</b> ${displayVal}</li>`;
+                         hasChanges = true;
+                    }
+                    detailsHtml += '</ul>';
+                    if (!hasChanges) detailsHtml = '<span class="text-muted">Atualização sem mudanças visíveis</span>';
+                } else if (log.action === 'DELETE') {
+                     detailsHtml = '<span class="text-danger">Cupom excluído</span>';
+                } else {
+                    detailsHtml = typeof details === 'object' ? JSON.stringify(details) : details;
+                }
+
+                tr.innerHTML = `
+                    <td>${formatDate(log.timestamp)}</td>
+                    <td>${log.admin_user || 'Sistema'}</td>
+                    <td><span class="badge badge-info">${log.action}</span></td>
+                    <td style="font-size: 0.9em;">${detailsHtml}</td>
+                `;
+                historyBody.appendChild(tr);
+            });
+        }
+    }
 });
+

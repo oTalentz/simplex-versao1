@@ -35,6 +35,9 @@
                 <a href="#" class="nav-item" data-tab="deliveries">
                     <i class="fas fa-box-open"></i> Entregas
                 </a>
+                <a href="#" class="nav-item" data-tab="coupons">
+                    <i class="fas fa-ticket-alt"></i> Cupons
+                </a>
                 <a href="#" class="nav-item" data-tab="settings">
                     <i class="fas fa-cog"></i> Configurações
                 </a>
@@ -150,6 +153,63 @@
                 </section>
             </div>
 
+            <div id="view-coupons" class="view-section hidden">
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2>Gerenciamento de Cupons</h2>
+                    <div class="actions" style="display: flex; gap: 10px;">
+                        <button class="btn-secondary" id="btn-import-coupons"><i class="fas fa-file-import"></i> Importar</button>
+                        <button class="btn-secondary" id="btn-export-coupons"><i class="fas fa-file-export"></i> Exportar</button>
+                        <button class="btn-secondary" id="btn-coupon-stats"><i class="fas fa-chart-bar"></i> Estatísticas</button>
+                        <button class="btn-primary" id="btn-new-coupon" style="background-color: var(--accent-gold); color: #000; font-weight: bold;"><i class="fas fa-plus"></i> Novo Cupom</button>
+                    </div>
+                    <input type="file" id="file-import-coupons" accept=".csv" style="display: none;">
+                </div>
+
+                <!-- Coupon Stats -->
+                <div class="status-grid" style="margin-bottom: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="status-info">
+                            <h3>Ativos</h3>
+                            <p class="status-text" id="stats-active-coupons">0</p>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-users"></i></div>
+                        <div class="status-info">
+                            <h3>Total Usos</h3>
+                            <p class="status-text" id="stats-total-uses">0</p>
+                        </div>
+                    </div>
+                    <div class="status-card">
+                        <div class="status-icon"><i class="fas fa-money-bill-wave"></i></div>
+                        <div class="status-info">
+                            <h3>Descontos Dados</h3>
+                            <p class="status-text" id="stats-total-discount">R$ 0,00</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Tipo</th>
+                                <th>Valor</th>
+                                <th>Usos</th>
+                                <th>Validade</th>
+                                <th>Status</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="coupons-table-body">
+                            <!-- JS populated -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div id="view-settings" class="view-section hidden" style="display: none;">
                 <!-- Server Status Info -->
                 <section id="server-connection-info" class="data-section" style="display: none; margin-bottom: 20px;">
@@ -225,6 +285,142 @@
                 </section>
             </div>
         </main>
+    </div>
+
+    <div id="coupon-modal" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="modal-content wizard-modal" style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 500px; border: 1px solid var(--border-color);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h3 id="coupon-modal-title" style="color: var(--accent-gold);">Novo Cupom</h3>
+                <button class="btn-close-modal" id="btn-close-coupon-modal" style="background: none; border: none; color: #fff; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="wizard-steps" style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <div class="step active" data-step="1" style="color: var(--accent-gold); font-weight: bold;">1. Básico</div>
+                <div class="step" data-step="2" style="color: var(--text-secondary);">2. Regras</div>
+                <div class="step" data-step="3" style="color: var(--text-secondary);">3. Limites</div>
+            </div>
+
+            <form id="coupon-form">
+                <!-- Step 1: Basic -->
+                <div class="wizard-pane active" data-step="1">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px;">Modelo Pré-configurado</label>
+                        <select id="coupon-template" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                            <option value="">Selecione um modelo...</option>
+                            <option value="WELCOME">Boas Vindas (10%)</option>
+                            <option value="BLACKFRIDAY">Black Friday (50%)</option>
+                            <option value="FIXED10">Desconto Fixo (R$ 10,00)</option>
+                            <option value="FIXED50">Desconto Fixo (R$ 50,00)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px;">Código do Cupom</label>
+                        <div class="input-with-action" style="display: flex; gap: 5px;">
+                            <input type="text" name="code" id="coupon-code" placeholder="EX: VERAO2024" style="text-transform: uppercase; flex: 1; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                            <button type="button" id="btn-generate-code" title="Gerar código" style="padding: 0 10px; background: #333; color: #fff; border: 1px solid #444; border-radius: 4px; cursor: pointer;"><i class="fas fa-random"></i></button>
+                        </div>
+                        <div id="coupon-code-feedback" style="font-size: 0.8em; margin-top: 4px; height: 1.2em;"></div>
+                        <small style="color: #777; font-size: 0.8em;">Deixe em branco para gerar automaticamente.</small>
+                    </div>
+                    <div class="form-row" style="display: flex; gap: 15px;">
+                        <div class="form-group" style="flex: 1;">
+                            <label style="display: block; margin-bottom: 5px;">Tipo de Desconto</label>
+                            <select name="discount_type" id="coupon-type" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                                <option value="PERCENT">Porcentagem (%)</option>
+                                <option value="FIXED">Valor Fixo (R$)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label style="display: block; margin-bottom: 5px;">Valor</label>
+                            <input type="number" name="discount_value" id="coupon-value" required min="1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Rules -->
+                <div class="wizard-pane hidden" data-step="2" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px;">Carrinho Mínimo (R$)</label>
+                        <input type="number" name="min_cart_value" id="coupon-min-cart" value="0" step="0.01" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                        <small style="color: #777; font-size: 0.8em;">Valor mínimo da compra para aplicar o cupom.</small>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px;">Status Inicial</label>
+                        <select name="status" id="coupon-status" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                            <option value="ACTIVE">Ativo</option>
+                            <option value="INACTIVE">Inativo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Step 3: Limits -->
+                <div class="wizard-pane hidden" data-step="3" style="display: none;">
+                    <div class="form-group" style="margin-bottom: 15px;">
+                        <label style="display: block; margin-bottom: 5px;">Data de Validade</label>
+                        <input type="datetime-local" name="expires_at" id="coupon-expires" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                        <small style="color: #777; font-size: 0.8em;">Deixe em branco para nunca expirar.</small>
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; margin-bottom: 5px;">Limite de Usos (Total)</label>
+                        <input type="number" name="max_uses" id="coupon-max-uses" value="-1" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #444; background: #222; color: #fff;">
+                        <small style="color: #777; font-size: 0.8em;">-1 para ilimitado.</small>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn-secondary" id="btn-prev-step" disabled style="padding: 8px 15px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #444; cursor: pointer;">Voltar</button>
+                    <button type="button" class="btn-primary" id="btn-next-step" style="padding: 8px 15px; border-radius: 4px; background: var(--accent-gold); color: #000; border: none; cursor: pointer; font-weight: bold;">Próximo</button>
+                    <button type="submit" class="btn-success hidden" id="btn-save-coupon" style="display: none; padding: 8px 15px; border-radius: 4px; background: #27ae60; color: #fff; border: none; cursor: pointer; font-weight: bold;">Salvar Cupom</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="coupon-history-modal" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 600px; border: 1px solid var(--border-color); max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h3 id="history-modal-title" style="color: var(--accent-gold);">Histórico do Cupom</h3>
+                <button class="btn-close-modal" id="btn-close-history-modal" style="background: none; border: none; color: #fff; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="table-container">
+                <table class="data-table" style="width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Usuário</th>
+                            <th>Ação</th>
+                            <th>Detalhes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-table-body">
+                        <!-- JS populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="coupon-stats-modal" class="modal-overlay hidden" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 2000; justify-content: center; align-items: center;">
+        <div class="modal-content" style="background: var(--bg-panel); padding: 30px; border-radius: 12px; width: 600px; border: 1px solid var(--border-color);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
+                <h3 style="color: var(--accent-gold);">Estatísticas Detalhadas</h3>
+                <button class="btn-close-modal" id="btn-close-stats-modal" style="background: none; border: none; color: #fff; cursor: pointer;"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="coupon-stats-content">
+                <h4>Top 5 Cupons Mais Usados</h4>
+                <table class="data-table" style="margin-top: 15px; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Usos</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-coupons-body">
+                        <!-- JS populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <script src="script.js"></script>

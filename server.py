@@ -10,6 +10,10 @@ import sqlite3
 import logging
 import datetime
 import traceback
+import csv
+import io
+import random
+import string
 from functools import wraps
 from flask import Flask, request, jsonify, g
 from flask_cors import CORS
@@ -311,11 +315,91 @@ def init_db():
         pass
 
     conn.execute("""
-        CREATE TABLE IF NOT EXISTS settings (
-            key TEXT PRIMARY KEY,
-            value TEXT
+        CREATE TABLE IF NOT EXISTS coupons (
+            code TEXT PRIMARY KEY,
+            discount_type TEXT DEFAULT 'PERCENT', -- 'PERCENT' or 'FIXED'
+            discount_value INTEGER DEFAULT 0, -- percent or fixed amount in cents
+            max_uses INTEGER DEFAULT -1,
+            used_count INTEGER DEFAULT 0,
+            expires_at TIMESTAMP,
+            min_cart_value INTEGER DEFAULT 0,
+            status TEXT DEFAULT 'ACTIVE', -- 'ACTIVE' or 'INACTIVE'
+            created_at TIMESTAMP,
+            updated_at TIMESTAMP
         )
     """)
+
+    # Migration for coupons table if it has old schema
+    try:
+        cur = conn.execute("PRAGMA table_info(coupons)")
+        columns = [row["name"] for row in cur.fetchall()]
+        if "discount_percent" in columns and "discount_type" not in columns:
+            # Old schema detected, migrate
+            logger.info("Migrating coupons table to new schema...")
+            # Rename old table
+            conn.execute("ALTER TABLE coupons RENAME TO coupons_old")
+            # Create new table
+            conn.execute("""
+                CREATE TABLE coupons (
+                    code TEXT PRIMARY KEY,
+                    discount_type TEXT DEFAULT 'PERCENT',
+                    discount_value INTEGER DEFAULT 0,
+                    max_uses INTEGER DEFAULT -1,
+                    used_count INTEGER DEFAULT 0,
+                    expires_at TIMESTAMP,
+                    min_cart_value INTEGER DEFAULT 0,
+                    status TEXT DEFAULT 'ACTIVE',
+                    created_at TIMESTAMP,
+                    updated_at TIMESTAMP
+                )
+            """)
+            # Migrate data
+            old_coupons = conn.execute("SELECT * FROM coupons_old").fetchall()
+            for old in old_coupons:
+                d_type = 'PERCENT'
+                d_val = old['discount_percent']
+                if old['discount_amount'] > 0:
+                    d_type = 'FIXED'
+                    d_val = old['discount_amount']
+                
+                conn.execute("""
+                    INSERT INTO coupons (code, discount_type, discount_value, max_uses, used_count, expires_at, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """, (old['code'], d_type, d_val, old['max_uses'], old['used_count'], old['expires_at'], now_iso(), now_iso()))
+            
+            conn.execute("DROP TABLE coupons_old")
+    except Exception as e:
+        logger.error(f"Migration failed: {e}")
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS coupon_usage (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            coupon_code TEXT,
+            customer_email TEXT,
+            order_id TEXT,
+            used_at TIMESTAMP,
+            FOREIGN KEY (coupon_code) REFERENCES coupons(code)
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS coupon_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            coupon_code TEXT,
+            admin_user TEXT,
+            action TEXT,
+            details TEXT,
+            timestamp TIMESTAMP
+        )
+    """)
+    try:
+        conn.execute("ALTER TABLE orders ADD COLUMN coupon_code TEXT")
+    except Exception:
+        pass
+    try:
+        conn.execute("ALTER TABLE orders ADD COLUMN discount_amount INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
     admin = conn.execute("SELECT id FROM admin_users WHERE username = ?", (ADMIN_USERNAME,)).fetchone()
     if not admin:
         conn.execute(
@@ -351,6 +435,19 @@ def audit(actor, action, status, metadata=None):
     conn.close()
 
 
+def log_coupon_change(code, action, details, admin_user):
+    try:
+        conn = get_db_connection()
+        conn.execute("""
+            INSERT INTO coupon_logs (coupon_code, admin_user, action, details, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        """, (code, admin_user, action, json.dumps(details, ensure_ascii=False), now_iso()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        logger.error(f"Failed to log coupon change: {e}")
+
+
 def get_requests_session():
     session = requests.Session()
     retry = Retry(total=3, backoff_factor=0.8, status_forcelist=[429, 500, 502, 503, 504], allowed_methods=["GET", "POST"])
@@ -368,7 +465,7 @@ def require_json():
 
 
 def validate_customer_data(data):
-    required = ["nickname", "email", "cpf", "product"]
+    required = ["nickname", "email", "product"]
     missing = [field for field in required if not data.get(field)]
     if missing:
         return False, f"Campos obrigatórios ausentes: {', '.join(missing)}"
@@ -381,9 +478,7 @@ def validate_customer_data(data):
     if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
         return False, "Email inválido"
 
-    cpf_clean = "".join(filter(str.isdigit, str(data.get("cpf", ""))))
-    if len(cpf_clean) != 11:
-        return False, "CPF deve conter 11 dígitos"
+    # CPF check removed as requested
 
     product_name = str(data.get("product", "")).replace("KIT", "").strip().upper()
     if product_name not in PRICES:
@@ -525,6 +620,121 @@ def auth_me():
     return jsonify({"username": g.user.get("sub"), "role": g.user.get("role")})
 
 
+def _validate_coupon_logic(code, original_amount, customer_email=None):
+    if not code:
+        return True, "", 0, 0
+
+    code = code.strip().upper()
+    conn = get_db_connection()
+    coupon = conn.execute("SELECT * FROM coupons WHERE code = ?", (code,)).fetchone()
+    
+    if not coupon:
+        conn.close()
+        return False, "Cupom não encontrado", 0, 0
+
+    # Check status
+    # Convert Row to dict to use .get() safely
+    coupon_data = dict(coupon)
+    if coupon_data.get("status", "ACTIVE") != "ACTIVE":
+        conn.close()
+        return False, "Cupom inativo", 0, 0
+
+    # Check expiration
+    if coupon_data.get("expires_at"):
+        try:
+            expires = datetime.datetime.fromisoformat(coupon_data["expires_at"])
+            if expires.tzinfo is None:
+                expires = expires.replace(tzinfo=datetime.timezone.utc)
+            if datetime.datetime.now(datetime.timezone.utc) > expires:
+                conn.close()
+                return False, "Cupom expirado", 0, 0
+        except Exception:
+            pass
+
+    # Check usage limit (overall)
+    if coupon["max_uses"] != -1 and coupon["used_count"] >= coupon["max_uses"]:
+        conn.close()
+        return False, "Limite de uso global atingido", 0, 0
+
+    # Check minimum cart value
+    min_val = coupon_data.get("min_cart_value", 0)
+    if original_amount < min_val:
+        conn.close()
+        return False, f"Valor mínimo para este cupom é R$ {min_val/100:.2f}", 0, 0
+
+    # Check per-customer limit (if email provided)
+    if customer_email:
+        usage = conn.execute(
+            "SELECT count(*) as count FROM coupon_usage WHERE coupon_code = ? AND customer_email = ?",
+            (code, customer_email)
+        ).fetchone()
+        if usage and usage["count"] >= 1: # Assuming limit 1 per customer for now
+            conn.close()
+            return False, "Você já utilizou este cupom", 0, 0
+
+    conn.close()
+
+    discount_amount = 0
+    discount_type = coupon_data.get("discount_type", "PERCENT")
+    discount_value = coupon_data.get("discount_value", 0)
+
+    if discount_type == "PERCENT":
+        discount_amount = int(original_amount * (discount_value / 100))
+    else:
+        discount_amount = discount_value
+
+    # Cap discount at original amount
+    if discount_amount > original_amount:
+        discount_amount = original_amount
+
+    percent = discount_value if discount_type == "PERCENT" else 0
+    return True, "Cupom aplicado com sucesso", percent, discount_amount
+
+
+@app.route('/api/validate-coupon', methods=['POST'])
+def validate_coupon_endpoint():
+    data, err = require_json()
+    if err:
+        return err
+    
+    code = data.get("code", "")
+    product_name = str(data.get("product", "")).replace("KIT", "").strip().upper()
+    
+    if product_name not in PRICES:
+        return jsonify({"error": "Produto inválido"}), 400
+
+    original_amount = PRICES[product_name]
+    # For validation endpoint, we might not have email yet, or it's optional.
+    # If the user wants to check if *they* can use it, they should send email.
+    email = data.get("email", "")
+    is_valid, msg, percent, discount = _validate_coupon_logic(code, original_amount, email)
+    
+    if not is_valid:
+        return jsonify({"valid": False, "message": msg}), 200
+
+    final_price = original_amount - discount
+    return jsonify({
+        "valid": True,
+        "message": msg,
+        "original_price": original_amount,
+        "discount_amount": discount,
+        "final_price": final_price,
+        "percent": percent
+    })
+
+
+def _record_coupon_usage(conn, coupon_code, email, order_id):
+    if not coupon_code:
+        return
+    
+    conn.execute("UPDATE coupons SET used_count = used_count + 1 WHERE code = ?", (coupon_code,))
+    
+    if email:
+        conn.execute(
+            "INSERT INTO coupon_usage (coupon_code, customer_email, order_id, used_at) VALUES (?, ?, ?, ?)",
+            (coupon_code, email, order_id, now_iso())
+        )
+
 @app.route('/create-payment', methods=['POST'])
 def create_payment():
     req_id = int(time.time() * 1000)
@@ -540,13 +750,21 @@ def create_payment():
     cpf_clean = "".join(filter(str.isdigit, str(data.get("cpf"))))
     product_name = str(data.get("product", "")).replace("KIT", "").strip().upper()
     amount = PRICES[product_name]
+
+    coupon_code = data.get("coupon", "")
+    is_valid, msg, percent, discount = _validate_coupon_logic(coupon_code, amount, email)
+    if coupon_code and not is_valid:
+        return jsonify({"error": msg}), 400
+
+    final_amount = amount - discount
+
     payload = {
         "frequency": "ONE_TIME",
         "methods": ["PIX"],
-        "products": [{"externalId": product_name, "name": f"VIP {product_name}", "quantity": 1, "price": amount, "description": f"VIP {product_name} para {nickname}"}],
+        "products": [{"externalId": product_name, "name": f"VIP {product_name}", "quantity": 1, "price": final_amount, "description": f"VIP {product_name} para {nickname}"}],
         "returnUrl": os.getenv("RETURN_URL", "http://localhost:5500/success"),
         "completionUrl": os.getenv("COMPLETION_URL", "http://localhost:5500/success"),
-        "customer": {"name": nickname, "email": email, "taxId": cpf_clean, "cellphone": sanitize_phone(data.get("cellphone"))}
+        "customer": {"name": nickname, "email": email, "taxId": "", "cellphone": sanitize_phone(data.get("cellphone"))}
     }
     session = get_requests_session()
     headers = {"Authorization": f"Bearer {ABACATE_API_TOKEN}", "Content-Type": "application/json"}
@@ -563,9 +781,11 @@ def create_payment():
             return jsonify({"error": "Resposta inválida do gateway"}), 502
         conn = get_db_connection()
         conn.execute(
-            "INSERT OR IGNORE INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (bill_id, nickname, email, cpf_clean, product_name, amount, "PENDING", "PENDING", now_iso(), now_iso())
+            "INSERT OR IGNORE INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at, coupon_code, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (bill_id, nickname, email, "", product_name, final_amount, "PENDING", "PENDING", now_iso(), now_iso(), coupon_code, discount)
         )
+        if discount > 0:
+            _record_coupon_usage(conn, coupon_code, email, bill_id)
         conn.commit()
         conn.close()
         audit("public", "create_payment", "success", {"bill_id": bill_id, "req_id": req_id})
@@ -595,8 +815,16 @@ def create_pix_payment():
     cpf_clean = "".join(filter(str.isdigit, str(data.get("cpf"))))
     product_name = str(data.get("product", "")).replace("KIT", "").strip().upper()
     amount = PRICES[product_name]
+
+    coupon_code = data.get("coupon", "")
+    is_valid_coupon, msg, percent, discount = _validate_coupon_logic(coupon_code, amount, email)
+    if coupon_code and not is_valid_coupon:
+        return jsonify({"error": msg}), 400
+
+    final_amount = amount - discount
+
     payload = {
-        "amount": amount,
+        "amount": final_amount,
         "description": f"VIP {product_name} - {nickname}",
         "customer": {"name": nickname, "email": email, "taxId": cpf_clean, "cellphone": sanitize_phone(data.get("cellphone"))}
     }
@@ -610,9 +838,11 @@ def create_pix_payment():
     pix_id = data_obj.get("id")
     conn = get_db_connection()
     conn.execute(
-        "INSERT OR IGNORE INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        (pix_id, nickname, email, cpf_clean, product_name, amount, "PENDING", "PENDING", now_iso(), now_iso())
+        "INSERT OR IGNORE INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at, coupon_code, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (pix_id, nickname, email, cpf_clean, product_name, final_amount, "PENDING", "PENDING", now_iso(), now_iso(), coupon_code, discount)
     )
+    if discount > 0:
+        _record_coupon_usage(conn, coupon_code, email, pix_id)
     conn.commit()
     conn.close()
     return jsonify({"brCode": data_obj.get("brCode"), "brCodeBase64": data_obj.get("brCodeBase64"), "pixId": pix_id})
@@ -1021,6 +1251,226 @@ def swagger_json():
         return jsonify({"error": "Swagger não encontrado"}), 404
     with open(schema_path, "r", encoding="utf-8") as file:
         return jsonify(json.load(file))
+
+
+@app.route('/admin/coupons', methods=['GET'])
+@require_auth
+def admin_get_coupons():
+    conn = get_db_connection()
+    coupons = conn.execute("SELECT * FROM coupons ORDER BY created_at DESC").fetchall()
+    conn.close()
+    return jsonify([dict(row) for row in coupons])
+
+@app.route('/admin/coupons', methods=['POST'])
+@require_auth
+def admin_create_coupon():
+    data, err = require_json()
+    if err: return err
+    
+    code = str(data.get("code", "")).strip().upper()
+    if not code:
+        # Generate random code if not provided
+        code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    
+    conn = get_db_connection()
+    exists = conn.execute("SELECT 1 FROM coupons WHERE code = ?", (code,)).fetchone()
+    if exists:
+        conn.close()
+        return jsonify({"error": "Código já existe"}), 400
+        
+    try:
+        conn.execute("""
+            INSERT INTO coupons (
+                code, discount_type, discount_value, max_uses, used_count, expires_at, min_cart_value, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, 0, ?, ?, ?, ?, ?)
+        """, (
+            code,
+            data.get("discount_type", "PERCENT"),
+            int(data.get("discount_value", 0)),
+            int(data.get("max_uses", -1)),
+            data.get("expires_at"), # Expects ISO format or None
+            int(data.get("min_cart_value", 0)),
+            data.get("status", "ACTIVE"),
+            now_iso(),
+            now_iso()
+        ))
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+        
+    conn.close()
+    audit(g.user.get("sub"), "create_coupon", "success", {"code": code})
+    log_coupon_change(code, "CREATE", data, g.user.get("sub"))
+    return jsonify({"success": True, "code": code})
+
+@app.route('/admin/coupons/<code>', methods=['PUT'])
+@require_auth
+def admin_update_coupon(code):
+    data, err = require_json()
+    if err: return err
+    
+    code = code.upper()
+    conn = get_db_connection()
+    
+    old_coupon = conn.execute("SELECT * FROM coupons WHERE code = ?", (code,)).fetchone()
+    if not old_coupon:
+        conn.close()
+        return jsonify({"error": "Cupom não encontrado"}), 404
+    old_data = dict(old_coupon)
+
+    try:
+        conn.execute("""
+            UPDATE coupons SET
+                discount_type = ?,
+                discount_value = ?,
+                max_uses = ?,
+                expires_at = ?,
+                min_cart_value = ?,
+                status = ?,
+                updated_at = ?
+            WHERE code = ?
+        """, (
+            data.get("discount_type", "PERCENT"),
+            int(data.get("discount_value", 0)),
+            int(data.get("max_uses", -1)),
+            data.get("expires_at"),
+            int(data.get("min_cart_value", 0)),
+            data.get("status", "ACTIVE"),
+            now_iso(),
+            code
+        ))
+        conn.commit()
+    except Exception as e:
+        conn.close()
+        return jsonify({"error": str(e)}), 500
+        
+    conn.close()
+    audit(g.user.get("sub"), "update_coupon", "success", {"code": code})
+    log_coupon_change(code, "UPDATE", {"before": old_data, "after": data}, g.user.get("sub"))
+    return jsonify({"success": True})
+
+@app.route('/admin/coupons/<code>', methods=['DELETE'])
+@require_auth
+def admin_delete_coupon(code):
+    code = code.upper()
+    conn = get_db_connection()
+    conn.execute("DELETE FROM coupons WHERE code = ?", (code,))
+    conn.commit()
+    conn.close()
+    audit(g.user.get("sub"), "delete_coupon", "success", {"code": code})
+    log_coupon_change(code, "DELETE", {}, g.user.get("sub"))
+    return jsonify({"success": True})
+
+@app.route('/admin/coupons/import', methods=['POST'])
+@require_auth
+def admin_import_coupons():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "No selected file"}), 400
+        
+    try:
+        stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
+        reader = csv.DictReader(stream)
+        
+        conn = get_db_connection()
+        count = 0
+        for row in reader:
+            code = row.get("code", "").strip().upper()
+            if not code: continue
+            
+            conn.execute("""
+                INSERT OR REPLACE INTO coupons (
+                    code, discount_type, discount_value, max_uses, used_count, expires_at, min_cart_value, status, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                code,
+                row.get("discount_type", "PERCENT"),
+                int(row.get("discount_value", 0)),
+                int(row.get("max_uses", -1)),
+                int(row.get("used_count", 0)),
+                row.get("expires_at") or None,
+                int(row.get("min_cart_value", 0)),
+                row.get("status", "ACTIVE"),
+                now_iso(),
+                now_iso()
+            ))
+            count += 1
+            log_coupon_change(code, "IMPORT", row, g.user.get("sub"))
+            
+        conn.commit()
+        conn.close()
+        audit(g.user.get("sub"), "import_coupons", "success", {"count": count})
+        return jsonify({"success": True, "count": count})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/admin/coupons/export', methods=['GET'])
+@require_auth
+def admin_export_coupons():
+    conn = get_db_connection()
+    coupons = conn.execute("SELECT * FROM coupons").fetchall()
+    conn.close()
+    
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['code', 'discount_type', 'discount_value', 'max_uses', 'used_count', 'expires_at', 'min_cart_value', 'status'])
+    
+    for c in coupons:
+        writer.writerow([
+            c['code'], c['discount_type'], c['discount_value'], c['max_uses'], 
+            c['used_count'], c['expires_at'], c['min_cart_value'], c['status']
+        ])
+        
+    return jsonify({"csv": output.getvalue()})
+
+
+@app.route('/admin/coupons/<code>/logs', methods=['GET'])
+@require_auth
+def admin_get_coupon_logs(code):
+    conn = get_db_connection()
+    try:
+        logs = conn.execute("SELECT * FROM coupon_logs WHERE coupon_code = ? ORDER BY timestamp DESC", (code,)).fetchall()
+        return jsonify([dict(row) for row in logs])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
+
+
+@app.route('/admin/coupons/stats', methods=['GET'])
+@require_auth
+def admin_coupon_stats():
+    conn = get_db_connection()
+    try:
+        # Total Active Coupons
+        active_count = conn.execute("SELECT COUNT(*) as c FROM coupons WHERE status = 'ACTIVE'").fetchone()['c']
+        
+        # Total Coupons Used (sum of used_count)
+        total_uses = conn.execute("SELECT SUM(used_count) as s FROM coupons").fetchone()['s'] or 0
+        
+        # Total Discount Given
+        total_discount = 0
+        try:
+            total_discount = conn.execute("SELECT SUM(discount_amount) as s FROM orders WHERE status = 'PAID'").fetchone()['s'] or 0
+        except Exception:
+            pass 
+            
+        # Top 5 Coupons
+        top_coupons = conn.execute("SELECT code, used_count FROM coupons ORDER BY used_count DESC LIMIT 5").fetchall()
+        
+        return jsonify({
+            "active_coupons": active_count,
+            "total_uses": total_uses,
+            "total_discount_given": total_discount,
+            "top_coupons": [dict(row) for row in top_coupons]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 
 def register_api_aliases():
