@@ -146,7 +146,14 @@ every 30 seconds:
     if {simplex::token} is set:
         # Heartbeat
         set {_hb_body} to "{""type"":""heartbeat"",""payload"":{""agent"":""%{simplex::agent}%"",""online"":%number of all players%}}"
-        simplex_request("POST", "/connector/events", {_hb_body})
+        
+        # Envia heartbeat e captura resposta para logging
+        set {_hb_res} to simplex_request("POST", "/connector/events", {_hb_body})
+        
+        if {_hb_res} is "ERROR":
+            send "&c[Simplex] Falha ao enviar Heartbeat (Verifique a API)." to console
+        else:
+            send "&a[Simplex] Heartbeat enviado. Jogadores: %number of all players%" to console
         
         # Check deliveries
         set {_res} to simplex_request("GET", "/connector/deliveries")
