@@ -18,6 +18,14 @@ def fix_db():
         columns = [row["name"] for row in cursor.fetchall()]
         print(f"Current orders columns: {columns}")
 
+        if "delivery_status" not in columns:
+            print("Adding delivery_status column...")
+            try:
+                cursor.execute("ALTER TABLE orders ADD COLUMN delivery_status TEXT DEFAULT 'PENDING'")
+                print("Added delivery_status.")
+            except Exception as e:
+                print(f"Error adding delivery_status: {e}")
+
         if "coupon_code" not in columns:
             print("Adding coupon_code column...")
             try:

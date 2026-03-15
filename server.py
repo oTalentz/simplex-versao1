@@ -429,6 +429,11 @@ def init_db():
     except Exception:
         pass
 
+    try:
+        conn.execute("ALTER TABLE orders ADD COLUMN delivery_status TEXT DEFAULT 'PENDING'")
+    except Exception:
+        pass
+
     admin = conn.execute("SELECT id FROM admin_users WHERE username = ?", (ADMIN_USERNAME,)).fetchone()
     if not admin:
         conn.execute(
@@ -1214,7 +1219,7 @@ def connector_deliveries():
         "SELECT id, customer_name, product FROM orders WHERE status = 'PAID' AND delivery_status = 'PENDING' LIMIT 50"
     ).fetchall()
     conn.close()
-    return jsonify({"deliveries": [dict(row) for row in rows]})
+    return jsonify([dict(row) for row in rows])
 
 
 @app.route('/connector/deliveries/confirm', methods=['POST'])
