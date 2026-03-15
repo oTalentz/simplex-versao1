@@ -22,6 +22,11 @@ load_dotenv()
 
 # Setup Turso/LibSQL if configured
 TURSO_DATABASE_URL = os.getenv("TURSO_DATABASE_URL")
+if TURSO_DATABASE_URL:
+    # Force HTTPS protocol for Vercel/Serverless compatibility
+    # WebSockets (wss://) often fail in serverless environments or require specific headers
+    TURSO_DATABASE_URL = TURSO_DATABASE_URL.replace("wss://", "https://").replace("libsql://", "https://")
+
 TURSO_AUTH_TOKEN = os.getenv("TURSO_AUTH_TOKEN")
 USE_TURSO = bool(TURSO_DATABASE_URL and TURSO_AUTH_TOKEN)
 
