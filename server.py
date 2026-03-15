@@ -862,6 +862,31 @@ def create_pix_payment():
 
     final_amount = amount - discount
 
+    # Handle 100% discount (Free Order)
+    if final_amount <= 0:
+        free_id = f"free_{int(time.time() * 1000)}"
+        conn = get_db_connection()
+        conn.execute(
+            "INSERT INTO orders (id, customer_name, customer_email, customer_cpf, product, amount, status, delivery_status, created_at, updated_at, coupon_code, discount_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (free_id, nickname, email, cpf_clean, product_name, 0, "PAID", "PENDING", now_iso(), now_iso(), coupon_code, discount)
+        )
+        if discount > 0:
+            _record_coupon_usage(conn, coupon_code, email, free_id)
+        
+        # Trigger delivery immediately
+        delivered = deliver_vip_rcon(nickname, product_name)
+        delivery_status = "DELIVERED" if delivered else "PENDING"
+        conn.execute("UPDATE orders SET delivery_status = ?, updated_at = ? WHERE id = ?", (delivery_status, now_iso(), free_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            "success": True, 
+            "free": True, 
+            "message": "Cupom de 100% aplicado! VIP ativado com sucesso." if delivered else "Cupom de 100% aplicado! Ativação em processamento."
+        })
+
     payload = {
         "amount": final_amount,
         "description": f"VIP {product_name} - {nickname}",

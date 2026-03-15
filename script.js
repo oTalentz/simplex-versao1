@@ -443,6 +443,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = await response.json();
 
                 if (response.ok) {
+                    if (data.free) {
+                        alert(data.message);
+                        closeModal(modalContext);
+                        // Optional: Reload page or update UI
+                        return;
+                    }
                     if (data.brCodeBase64) {
                         // Success! Show PIX QR Code inside modal
                         showPixModal(modalContext, data);
