@@ -124,7 +124,23 @@ document.addEventListener('DOMContentLoaded', () => {
                         pairStatus.textContent = `Servidor "${data.agent}" conectado com sucesso!`;
                         pairStatus.className = 'status-text ok';
                         pairInput.value = '';
-                        await fetchStatus(); // Update status indicators
+                        
+                        // Poll for status update until online or timeout (max 10 attempts)
+                        let attempts = 0;
+                        const pollInterval = setInterval(async () => {
+                            attempts++;
+                            try {
+                                const statusData = await apiFetch('/admin/status');
+                                if (statusData.mc_status === 'online' || statusData.mc_status === 'warning') {
+                                    clearInterval(pollInterval);
+                                    fetchStatus(); // Final update to UI
+                                }
+                            } catch (e) { console.error('Polling error', e); }
+                            
+                            if (attempts >= 10) clearInterval(pollInterval);
+                        }, 2000);
+                        
+                        await fetchStatus(); // Immediate check
                     } else {
                         throw new Error(data.error || 'Falha ao conectar servidor');
                     }

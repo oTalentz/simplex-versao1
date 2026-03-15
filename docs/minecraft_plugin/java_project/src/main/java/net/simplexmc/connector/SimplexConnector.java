@@ -73,23 +73,23 @@ public class SimplexConnector extends JavaPlugin {
 
                     String response = sendRequest("POST", "/connector/setup/init", json.toString());
                     
-                    // Run back on main thread to log
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            getLogger().info("=========================================");
-                            getLogger().info("PAREAMENTO NECESSÁRIO");
-                            getLogger().info("Código: " + pairingCode);
-                            getLogger().info("Insira este código no Painel Admin > Configurações");
-                            getLogger().info("=========================================");
-                        }
-                    }.runTask(SimplexConnector.this);
-
                 } catch (Exception e) {
                     getLogger().log(Level.SEVERE, "Erro ao registrar código de pareamento: " + e.getMessage());
                 }
             }
         }.runTaskAsynchronously(this);
+
+        // Reminder Task - Flashy message every 15s
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!isPairing || (authToken != null && !authToken.isEmpty())) {
+                    this.cancel();
+                    return;
+                }
+                printPairingMessage();
+            }
+        }.runTaskTimer(this, 0L, 300L); // 0 delay, 300 ticks = 15 seconds
 
         // Polling task
         new BukkitRunnable() {
@@ -141,6 +141,18 @@ public class SimplexConnector extends JavaPlugin {
         }.runTaskTimerAsynchronously(this, 100L, 100L); // Every 5 seconds
     }
 
+    private void printPairingMessage() {
+        ConsoleCommandSender sender = Bukkit.getConsoleSender();
+        sender.sendMessage(ChatColor.GOLD + "=========================================");
+        sender.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "       SIMPLEX: PAREAMENTO NECESSÁRIO");
+        sender.sendMessage("");
+        sender.sendMessage(ChatColor.YELLOW + "   Código de Vinculação: " + ChatColor.AQUA + ChatColor.BOLD + pairingCode);
+        sender.sendMessage("");
+        sender.sendMessage(ChatColor.YELLOW + "   Insira este código no Painel Admin");
+        sender.sendMessage(ChatColor.YELLOW + "   Acesse: " + ChatColor.UNDERLINE + "Configurações > Conectar Servidor");
+        sender.sendMessage(ChatColor.GOLD + "=========================================");
+    }
+
     private void startMainLoop() {
         int interval = getConfig().getInt("check_interval", 15) * 20; // Convert to ticks
 
@@ -176,7 +188,7 @@ public class SimplexConnector extends JavaPlugin {
                     getLogger().warning("Erro no loop principal: " + e.getMessage());
                 }
             }
-        }.runTaskTimerAsynchronously(this, interval, interval);
+        }.runTaskTimerAsynchronously(this, 0L, interval);
     }
 
     private void processDelivery(JsonObject delivery) {
