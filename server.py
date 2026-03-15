@@ -301,7 +301,19 @@ def init_db():
             agent_name TEXT,
             status TEXT DEFAULT 'PENDING',
             token TEXT,
+            revoked INTEGER DEFAULT 0,
             created_at TIMESTAMP
+        )
+    """)
+    try:
+        conn.execute("ALTER TABLE pairing_codes ADD COLUMN revoked INTEGER DEFAULT 0")
+    except Exception:
+        pass
+
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS settings (
+            key TEXT PRIMARY KEY,
+            value TEXT
         )
     """)
     admin = conn.execute("SELECT id FROM admin_users WHERE username = ?", (ADMIN_USERNAME,)).fetchone()
@@ -684,15 +696,18 @@ def _status_payload():
         conn = get_db_connection()
         conn.execute("SELECT 1").fetchone()
         heartbeat_at, heartbeat_data = _get_latest_connector_heartbeat(conn)
-        conn.close()
         
         status = _mc_online_state(heartbeat_at)
         payload["mc_status"] = status
         
         if status != "offline" and heartbeat_data:
-            payload["mc_server_name"] = heartbeat_data.get("agent", "Unknown")
+            # Check for override in settings
+            settings_name = conn.execute("SELECT value FROM settings WHERE key = 'server_name'").fetchone()
+            payload["mc_server_name"] = settings_name["value"] if settings_name else heartbeat_data.get("agent", "Unknown")
             payload["mc_players_online"] = heartbeat_data.get("online", 0)
             payload["mc_last_seen"] = heartbeat_at.isoformat() if heartbeat_at else None
+            
+        conn.close()
             
     except Exception:
         payload["db_status"] = "offline"
@@ -735,7 +750,18 @@ def connector_events():
     payload = data.get("payload", {})
     if not event_type:
         return jsonify({"error": "type é obrigatório"}), 400
+    
     conn = get_db_connection()
+    
+    # Check if token is revoked
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        token = auth_header.split(" ", 1)[1].strip()
+        row = conn.execute("SELECT revoked FROM pairing_codes WHERE token = ?", (token,)).fetchone()
+        if row and row["revoked"]:
+            conn.close()
+            return jsonify({"error": "Token revoked"}), 403
+
     conn.execute(
         "INSERT OR REPLACE INTO connector_cache (cache_key, payload, updated_at) VALUES (?, ?, ?)",
         (f"{g.user.get('sub')}:{int(time.time() * 1000)}", json.dumps({"type": event_type, "payload": payload}), now_iso())
@@ -838,6 +864,74 @@ def admin_claim_connector():
 
     audit(g.user.get("sub"), "claim_connector", "success", {"code": code, "agent": agent_name})
     return jsonify({"success": True, "agent": agent_name, "token": token})
+
+
+@app.route('/admin/connector/disconnect', methods=['POST'])
+@require_auth
+def admin_connector_disconnect():
+    # Revoke active token logic
+    # Find the most recent active connector from cache
+    conn = get_db_connection()
+    rows = conn.execute(
+        "SELECT cache_key, payload FROM connector_cache ORDER BY updated_at DESC LIMIT 1"
+    ).fetchall()
+    
+    revoked_count = 0
+    if rows:
+        try:
+            # cache_key format: sub:timestamp
+            cache_key = rows[0]["cache_key"]
+            sub = cache_key.split(":")[0]
+            
+            # Find pairing code with this sub (token sub matches)
+            # Actually, sub is in the token. We need to find the token that produces this sub?
+            # Or just clear the cache and rely on token revocation if we had it.
+            # But we added 'revoked' column to pairing_codes.
+            # We need to find which code corresponds to this sub.
+            # sub format: connector_{agent}_{code}
+            # We can extract code from sub.
+            parts = sub.split("_")
+            if len(parts) >= 3:
+                code = parts[-1]
+                conn.execute("UPDATE pairing_codes SET revoked = 1 WHERE code = ?", (code,))
+                revoked_count = conn.total_changes
+        except Exception as e:
+            logger.error(f"Error revoking token: {e}")
+
+    # Clear cache
+    conn.execute("DELETE FROM connector_cache")
+    # Also clear server_name setting
+    conn.execute("DELETE FROM settings WHERE key = 'server_name'")
+    
+    conn.commit()
+    conn.close()
+    
+    audit(g.user.get("sub"), "connector_disconnect", "success", {"revoked": revoked_count})
+    return jsonify({"success": True})
+
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@require_auth
+def admin_settings():
+    conn = get_db_connection()
+    if request.method == 'POST':
+        data, err = require_json()
+        if err:
+            return err
+        key = str(data.get("key", "")).strip()
+        value = str(data.get("value", "")).strip()
+        if not key:
+            return jsonify({"error": "Key is required"}), 400
+        
+        conn.execute("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)", (key, value))
+        conn.commit()
+        conn.close()
+        audit(g.user.get("sub"), "update_setting", "success", {"key": key, "value": value})
+        return jsonify({"success": True})
+    else:
+        rows = conn.execute("SELECT key, value FROM settings").fetchall()
+        conn.close()
+        return jsonify({row["key"]: row["value"] for row in rows})
 
 
 @app.route('/connector/cache', methods=['GET'])

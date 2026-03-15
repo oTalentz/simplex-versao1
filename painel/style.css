@@ -522,6 +522,53 @@ body {
     cursor: not-allowed;
 }
 
+.btn-danger-outline {
+    background-color: transparent;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-danger-outline:hover {
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.btn-icon-small {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon-small:hover {
+    color: var(--text-primary);
+    background-color: var(--bg-hover);
+}
+
+.btn-icon-small.success:hover {
+    color: var(--success);
+    background-color: rgba(46, 204, 113, 0.1);
+}
+
+.btn-icon-small.danger:hover {
+    color: var(--danger);
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
 #pairing-status {
     margin-top: 10px;
     font-size: 0.9rem;

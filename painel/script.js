@@ -23,12 +23,17 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionUser.textContent = username ? `Sessão: ${username}` : '';
     }
 
-    async function apiFetch(path) {
+    async function apiFetch(path, options = {}) {
         let response;
         try {
-            response = await fetch(`${API_BASE_URL}${path}`, {
-                headers: token ? { Authorization: `Bearer ${token}` } : {}
-            });
+            const fetchOptions = {
+                ...options,
+                headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                    ...(options.headers || {})
+                }
+            };
+            response = await fetch(`${API_BASE_URL}${path}`, fetchOptions);
         } catch {
             throw new Error('Não foi possível conectar ao backend em http://localhost:5000');
         }
@@ -128,6 +133,108 @@ document.addEventListener('DOMContentLoaded', () => {
                     pairStatus.className = 'status-text error';
                 } finally {
                     newBtn.disabled = false;
+                }
+            });
+        }
+
+        // Server Name Edit Logic
+        const btnEditName = document.getElementById('btn-edit-server-name');
+        const btnSaveName = document.getElementById('btn-save-server-name');
+        const btnCancelName = document.getElementById('btn-cancel-server-name');
+        const displayContainer = document.getElementById('server-name-display');
+        const editContainer = document.getElementById('server-name-edit');
+        const nameInput = document.getElementById('input-server-name');
+        const nameDisplay = document.getElementById('info-server-name');
+
+        if (btnEditName) {
+            // Clone to remove old listeners if any
+            const newEditBtn = btnEditName.cloneNode(true);
+            btnEditName.parentNode.replaceChild(newEditBtn, btnEditName);
+
+            newEditBtn.addEventListener('click', () => {
+                nameInput.value = nameDisplay.textContent === '-' ? '' : nameDisplay.textContent;
+                displayContainer.style.display = 'none';
+                editContainer.style.display = 'flex';
+                editContainer.classList.remove('hidden');
+                nameInput.focus();
+            });
+        }
+
+        if (btnCancelName) {
+            const newCancelBtn = btnCancelName.cloneNode(true);
+            btnCancelName.parentNode.replaceChild(newCancelBtn, btnCancelName);
+
+            newCancelBtn.addEventListener('click', () => {
+                editContainer.style.display = 'none';
+                editContainer.classList.add('hidden');
+                displayContainer.style.display = 'flex';
+            });
+        }
+
+        if (btnSaveName) {
+            const newSaveBtn = btnSaveName.cloneNode(true);
+            btnSaveName.parentNode.replaceChild(newSaveBtn, btnSaveName);
+
+            newSaveBtn.addEventListener('click', async () => {
+                const newName = nameInput.value.trim();
+                if (!newName) return;
+
+                const originalIcon = newSaveBtn.innerHTML;
+                newSaveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                newSaveBtn.disabled = true;
+
+                try {
+                    await apiFetch('/admin/settings', { // Use apiFetch wrapper to handle auth/errors automatically
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ key: 'server_name', value: newName })
+                    });
+                    
+                    nameDisplay.textContent = newName;
+                    editContainer.style.display = 'none';
+                    editContainer.classList.add('hidden');
+                    displayContainer.style.display = 'flex';
+                    await fetchStatus(); 
+                } catch (error) {
+                    alert('Erro ao salvar nome: ' + error.message);
+                } finally {
+                    newSaveBtn.innerHTML = originalIcon;
+                    newSaveBtn.disabled = false;
+                }
+            });
+        }
+
+        // Server Disconnect Logic
+        const btnDisconnect = document.getElementById('btn-disconnect-server');
+        if (btnDisconnect) {
+            const newDisconnectBtn = btnDisconnect.cloneNode(true);
+            btnDisconnect.parentNode.replaceChild(newDisconnectBtn, btnDisconnect);
+
+            newDisconnectBtn.addEventListener('click', async () => {
+                if (!confirm('Tem certeza que deseja desconectar este servidor? O pareamento será removido.')) {
+                    return;
+                }
+
+                const originalContent = newDisconnectBtn.innerHTML;
+                newDisconnectBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                newDisconnectBtn.disabled = true;
+
+                try {
+                    await apiFetch('/admin/connector/disconnect', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    await fetchStatus();
+                } catch (error) {
+                    alert('Erro ao desconectar: ' + error.message);
+                    newDisconnectBtn.innerHTML = originalContent;
+                    newDisconnectBtn.disabled = false;
                 }
             });
         }
