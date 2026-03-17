@@ -14,10 +14,10 @@ auth_token: ""
 # Comandos de entrega
 # Use %player% para o nick do jogador
 products:
-  VIP: "lp user %player% parent set VIP"
-  PRO: "lp user %player% parent set PRO"
-  MVP: "lp user %player% parent set MVP"
-  MVP_PLUS: "lp user %player% parent set MVP+"
+  VIP: "lp user %player% parent addtemp VIP 30d"
+  PRO: "lp user %player% parent addtemp PRO 30d"
+  MVP: "lp user %player% parent addtemp MVP 30d"
+  MVP_PLUS: "lp user %player% parent addtemp MVP+ 30d"
 
 # Intervalo de verificação em segundos
 check_interval: 15
