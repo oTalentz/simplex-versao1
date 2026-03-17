@@ -125,10 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const couponInput = modalContext.querySelector('.coupon-input');
         const btnApplyCoupon = modalContext.querySelector('.btn-apply-coupon');
         const couponFeedback = modalContext.querySelector('.coupon-feedback');
-        const priceSummary = modalContext.querySelector('.price-summary');
-        const summaryOriginal = modalContext.querySelector('.summary-original-price');
-        const summaryDiscount = modalContext.querySelector('.summary-discount');
-        const summaryTotal = modalContext.querySelector('.summary-total');
+        
+        // New Main Price Display
+        const mainPriceValue = modalContext.querySelector('.price-value');
+        const originalPriceElement = modalContext.querySelector('.price-original'); // New element for original price
+        const originalMainPrice = mainPriceValue ? mainPriceValue.textContent : '';
 
         // Update selector to include origin-btn
         const buyButton = modalContext.querySelector('.btn-buy-footer');
@@ -175,10 +176,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Payment Selector Integration
         let paymentSelectorInstance;
+        let creditCardComponentInstance;
+        
+        const ccContainer = modalContext.querySelector('.credit-card-container');
+        if (ccContainer && window.CreditCardComponent) {
+            creditCardComponentInstance = new window.CreditCardComponent(ccContainer);
+        }
+
         const paymentContainer = modalContext.querySelector('.payment-selector-container');
         if (paymentContainer && window.PaymentSelector) {
             paymentSelectorInstance = new window.PaymentSelector(paymentContainer, (method) => {
                 validationState.paymentMethod = !!method;
+                
+                if (method === 'credit_card' && creditCardComponentInstance) {
+                    creditCardComponentInstance.show();
+                } else if (creditCardComponentInstance) {
+                    creditCardComponentInstance.hide();
+                }
+
                 updateButtonState();
             });
         }
@@ -277,24 +292,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     if (data.valid) {
                         couponFeedback.textContent = data.message;
-                        couponFeedback.style.color = '#27ae60';
+                        couponFeedback.className = 'coupon-feedback success'; // Use success class
+                        couponFeedback.style.color = ''; // Remove inline style
                         
-                        // Update Price Summary
-                        if (priceSummary) {
-                            priceSummary.style.display = 'block';
-                            summaryOriginal.textContent = `R$ ${(data.original_price / 100).toFixed(2).replace('.', ',')}`;
-                            summaryDiscount.textContent = `- R$ ${(data.discount_amount / 100).toFixed(2).replace('.', ',')}`;
-                            summaryTotal.textContent = `R$ ${(data.final_price / 100).toFixed(2).replace('.', ',')}`;
+                        // Update Main Price Display with Promotion Style
+                        if (mainPriceValue) {
+                            // Show original price if element exists
+                            if (originalPriceElement) {
+                                originalPriceElement.style.display = 'block';
+                                originalPriceElement.textContent = `R$ ${(data.original_price / 100).toFixed(2).replace('.', ',')}`;
+                            }
+                            
+                            // Update current price
+                            mainPriceValue.textContent = `R$ ${(data.final_price / 100).toFixed(2).replace('.', ',')}`;
+                            mainPriceValue.style.color = '#27ae60'; // Green for discounted price
                         }
                     } else {
                         couponFeedback.textContent = data.message || 'Cupom inválido';
-                        couponFeedback.style.color = '#e74c3c';
-                        if (priceSummary) priceSummary.style.display = 'none';
+                        couponFeedback.className = 'coupon-feedback error'; // Use error class
+                        couponFeedback.style.color = ''; // Remove inline style
+
+                        // Reset Main Price Display
+                        if (mainPriceValue) {
+                            if (originalPriceElement) {
+                                originalPriceElement.style.display = 'none';
+                            }
+                            mainPriceValue.textContent = originalMainPrice;
+                            mainPriceValue.style.color = '#ffc107'; // Reset to gold
+                        }
                     }
                 } catch (err) {
                     console.error(err);
                     couponFeedback.textContent = 'Erro ao validar cupom';
-                    couponFeedback.style.color = '#e74c3c';
+                    couponFeedback.className = 'coupon-feedback error'; // Use error class
+                    couponFeedback.style.color = ''; // Remove inline style
+                    
+                    // Reset Main Price Display
+                    if (mainPriceValue) {
+                        if (originalPriceElement) {
+                            originalPriceElement.style.display = 'none';
+                        }
+                        mainPriceValue.textContent = originalMainPrice;
+                        mainPriceValue.style.color = '#ffc107';
+                    }
                 } finally {
                     btnApplyCoupon.textContent = originalBtnText;
                     btnApplyCoupon.disabled = false;
@@ -402,8 +442,58 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedMethod = paymentSelectorInstance ? paymentSelectorInstance.getSelectedMethod() : null;
 
             if (selectedMethod === 'credit_card') {
-                alert('Pagamento via Cartão de Crédito selecionado. Redirecionando para gateway seguro...');
-                // Implement Card logic here
+                if (creditCardComponentInstance && !creditCardComponentInstance.validate()) {
+                    // Force UI update to show errors if any
+                    return; 
+                }
+
+                const cardData = creditCardComponentInstance ? creditCardComponentInstance.getCardData() : null;
+
+                const nickname = nicknameInput.value.trim();
+                const email = emailInput ? emailInput.value.trim() : '';
+                const kitNameEl = modalContext.querySelector('.kit-title-modal');
+                const kitName = kitNameEl ? (kitNameEl.getAttribute('data-product') || kitNameEl.innerText.replace('KIT ', '')) : 'VIP';
+                const couponCode = couponInput ? couponInput.value.trim() : '';
+
+                const originalText = buyButton.textContent;
+                buyButton.textContent = 'REDIRECIONANDO...';
+                buyButton.disabled = true;
+
+                try {
+                    const endpoint = `${API_BASE_URL}/payment/create`;
+                    console.log(`Initiating Credit Card payment to ${endpoint}`);
+
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            nickname,
+                            email,
+                            product: kitName,
+                            coupon: couponCode,
+                            method: 'CREDIT_CARD'
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        if (data.url) {
+                            // Redirect to secure payment gateway
+                            window.location.href = data.url;
+                        } else {
+                            throw new Error('URL de checkout não retornada pelo gateway.');
+                        }
+                    } else {
+                        throw new Error(data.error || 'Erro ao criar pagamento via cartão');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    alert('Erro ao processar pagamento via cartão: ' + error.message);
+                    buyButton.textContent = originalText;
+                    buyButton.disabled = false;
+                    updateButtonState();
+                }
                 return;
             }
 

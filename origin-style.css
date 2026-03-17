@@ -7,19 +7,40 @@
 }
 
 .modal-highlight-box {
-    background: #ffc107;
+    background: linear-gradient(135deg, #FFC107 0%, #FFB300 100%);
+    /* Rich Gold Gradient */
+    border: 1px solid #e6a700;
+    /* Solid Gold Border */
     border-radius: 12px;
     padding: 20px;
     display: flex;
     align-items: center;
     gap: 20px;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
     margin: 0 20px 20px 20px;
     /* Consistent margin with style.css */
     width: auto;
     /* Let it fill the container minus margins */
-    color: #1a1a1a;
+    color: #212121;
+    /* Dark text for contrast */
     font-family: 'Rubik', sans-serif;
+}
+
+.kit-title-modal {
+    color: #000;
+    /* Black Title */
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    text-shadow: none;
+}
+
+.kit-subtitle-modal {
+    color: #333;
+    /* Dark Grey Subtitle */
+    margin: 0 0 15px 0;
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .input-group-vertical {
@@ -37,16 +58,115 @@
     padding: 12px;
     color: #fff;
     font-size: 0.95rem;
-    font-weight: 600;
+    font-weight: 500;
     font-family: 'Rubik', sans-serif;
     outline: none;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5);
-    transition: background 0.2s;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: all 0.2s ease;
 }
 
 .origin-input:focus {
     background: #000;
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.8), 0 0 0 2px #e67e22;
+    border-color: transparent;
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.5), 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Coupon Section Styling */
+.coupon-wrapper-styled {
+    display: flex;
+    gap: 8px;
+    margin-top: 15px;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    align-items: stretch;
+}
+
+.btn-apply-styled {
+    background: #1a1a1a;
+    color: #ffc107;
+    border: 2px solid #1a1a1a;
+    padding: 0 20px;
+    font-weight: 800;
+    cursor: pointer;
+    border-radius: 6px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-apply-styled:hover {
+    background: #333;
+    border-color: #333;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.btn-apply-styled:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.btn-apply-styled:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Coupon Feedback Styles */
+.coupon-feedback {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Rubik', sans-serif;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    animation: fadeIn 0.3s ease-out;
+}
+
+.coupon-feedback.success {
+    display: flex;
+    background: #27ae60;
+    color: white;
+    border: 1px solid #2ecc71;
+}
+
+.coupon-feedback.error {
+    display: flex;
+    background: #c0392b;
+    color: white;
+    border: 1px solid #e74c3c;
+}
+
+/* Icon styles for feedback (using pseudo-elements for simplicity) */
+.coupon-feedback.success::before {
+    content: '✓';
+    font-weight: 900;
+    font-size: 1.1em;
+}
+
+.coupon-feedback.error::before {
+    content: '✕';
+    font-weight: 900;
+    font-size: 1.1em;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .origin-input::placeholder {

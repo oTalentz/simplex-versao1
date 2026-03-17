@@ -1,0 +1,158 @@
+.credit-card-wrapper {
+    margin-top: 15px;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 15px;
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    gap: 12px;
+    animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.credit-card-wrapper.active {
+    display: flex;
+}
+
+.cc-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cc-input-group label {
+    font-size: 0.8rem;
+    color: #ccc;
+    font-family: 'Rubik', sans-serif;
+    font-weight: 500;
+}
+
+.cc-input {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #444;
+    color: #fff;
+    padding: 10px;
+    border-radius: 6px;
+    font-family: 'Rubik', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.cc-input:focus {
+    border-color: #ffc107;
+    box-shadow: 0 0 5px rgba(255, 193, 7, 0.3);
+}
+
+.cc-row {
+    display: flex;
+    gap: 10px;
+}
+
+.cc-row .cc-input-group {
+    flex: 1;
+}
+
+/* Card Visual Representation */
+.cc-visual {
+    background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 10px;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.cc-visual::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,215,0,0.05) 0%, transparent 60%);
+    pointer-events: none;
+}
+
+.cc-visual-chip {
+    width: 40px;
+    height: 30px;
+    background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%);
+    border-radius: 6px;
+    position: relative;
+    overflow: hidden;
+}
+
+.cc-visual-chip::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: rgba(0,0,0,0.2);
+}
+
+.cc-visual-number {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.2rem;
+    color: #fff;
+    letter-spacing: 2px;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    margin-top: 15px;
+}
+
+.cc-visual-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-top: 15px;
+}
+
+.cc-visual-name {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #ccc;
+    text-transform: uppercase;
+}
+
+.cc-visual-expiry {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+.cc-visual-brand {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-style: italic;
+    font-weight: 900;
+    color: rgba(255,255,255,0.8);
+    font-size: 1.2rem;
+}
+
+/* Error states */
+.cc-input.error {
+    border-color: #e74c3c;
+}
+.cc-error-msg {
+    color: #e74c3c;
+    font-size: 0.75rem;
+    margin-top: 2px;
+    display: none;
+}
+.cc-input.error + .cc-error-msg {
+    display: block;
+}

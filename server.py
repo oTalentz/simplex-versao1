@@ -792,15 +792,23 @@ def create_payment():
     amount = PRICES[product_name]
 
     coupon_code = data.get("coupon", "")
+    payment_method = data.get("method", "PIX")
+
     is_valid, msg, percent, discount = _validate_coupon_logic(coupon_code, amount, email)
     if coupon_code and not is_valid:
         return jsonify({"error": msg}), 400
 
     final_amount = amount - discount
+    
+    # Map frontend methods to AbacatePay compatible methods
+    api_methods = ["PIX"]
+    if payment_method in ["CREDIT_CARD", "CARD"]:
+        # AbacatePay uses "CARD" for credit card method
+        api_methods = ["CARD"]
 
     payload = {
         "frequency": "ONE_TIME",
-        "methods": ["PIX"],
+        "methods": api_methods,
         "products": [{"externalId": product_name, "name": f"VIP {product_name}", "quantity": 1, "price": final_amount, "description": f"VIP {product_name} para {nickname}"}],
         "returnUrl": os.getenv("RETURN_URL", "http://localhost:5500/success"),
         "completionUrl": os.getenv("COMPLETION_URL", "http://localhost:5500/success"),
