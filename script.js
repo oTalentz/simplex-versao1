@@ -176,22 +176,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Payment Selector Integration
         let paymentSelectorInstance;
-        let creditCardComponentInstance;
         
-        const ccContainer = modalContext.querySelector('.credit-card-container');
-        if (ccContainer && window.CreditCardComponent) {
-            creditCardComponentInstance = new window.CreditCardComponent(ccContainer);
-        }
-
         const paymentContainer = modalContext.querySelector('.payment-selector-container');
         if (paymentContainer && window.PaymentSelector) {
             paymentSelectorInstance = new window.PaymentSelector(paymentContainer, (method) => {
                 validationState.paymentMethod = !!method;
                 
-                if (method === 'credit_card' && creditCardComponentInstance) {
-                    creditCardComponentInstance.show();
-                } else if (creditCardComponentInstance) {
-                    creditCardComponentInstance.hide();
+                // Update button text based on method
+                if (method === 'credit_card') {
+                    buyButton.textContent = 'COMPRAR COM CARTÃO';
+                } else {
+                    buyButton.textContent = 'GERAR PIX';
                 }
 
                 updateButtonState();
@@ -442,13 +437,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const selectedMethod = paymentSelectorInstance ? paymentSelectorInstance.getSelectedMethod() : null;
 
             if (selectedMethod === 'credit_card') {
-                if (creditCardComponentInstance && !creditCardComponentInstance.validate()) {
-                    // Force UI update to show errors if any
-                    return; 
-                }
-
-                const cardData = creditCardComponentInstance ? creditCardComponentInstance.getCardData() : null;
-
                 const nickname = nicknameInput.value.trim();
                 const email = emailInput ? emailInput.value.trim() : '';
                 const kitNameEl = modalContext.querySelector('.kit-title-modal');
