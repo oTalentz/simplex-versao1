@@ -819,6 +819,9 @@ def create_payment():
     # If cpf_clean is provided, add taxId
     if cpf_clean:
         customer_data["taxId"] = cpf_clean
+    else:
+        # AbacatePay requires taxId to be a string even if empty
+        customer_data["taxId"] = "00000000000"
         
     payload = {
         "frequency": "ONE_TIME",
