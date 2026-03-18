@@ -803,8 +803,8 @@ def create_payment():
     # Map frontend methods to AbacatePay compatible methods
     api_methods = ["PIX"]
     if payment_method in ["CREDIT_CARD", "CARD"]:
-        # AbacatePay uses "CARD" for credit card method
-        api_methods = ["CARD"]
+        # Conforme instruções da AbacatePay, usar 'card' ou 'PIX'
+        api_methods = ["PIX", "CARD"]
 
     payload = {
         "frequency": "ONE_TIME",
