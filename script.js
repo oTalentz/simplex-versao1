@@ -473,6 +473,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             throw new Error('URL de checkout não retornada pelo gateway.');
                         }
                     } else {
+                        console.error('Payment Gateway Error Details:', data.details);
                         throw new Error(data.error || 'Erro ao criar pagamento via cartão');
                     }
                 } catch (error) {

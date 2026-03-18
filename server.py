@@ -803,16 +803,30 @@ def create_payment():
     # Map frontend methods to AbacatePay compatible methods
     api_methods = ["PIX"]
     if payment_method in ["CREDIT_CARD", "CARD"]:
-        # Conforme instruções da AbacatePay, usar 'card' ou 'PIX'
+        # Conforme instruções da AbacatePay, usar 'card'
         api_methods = ["PIX", "CARD"]
 
+    # Calculate price in integer format if necessary (Assuming AbacatePay expects cents, e.g. R$ 44.91 -> 4491, check if final_amount is correctly formatted. If it's 44.91 it should be 4491 in most gateways but here we pass the float maybe? No, final_amount is integer cents in previous code)
+    # Let's ensure taxId is formatted correctly or null. If we pass empty string "", it might throw an error. Let's pass null or valid.
+    # Actually, Abacatepay expects taxId as string but if empty it might reject. Let's omit taxId if empty.
+    
+    customer_data = {
+        "name": nickname, 
+        "email": email, 
+        "cellphone": sanitize_phone(data.get("cellphone"))
+    }
+    
+    # If cpf_clean is provided, add taxId
+    if cpf_clean:
+        customer_data["taxId"] = cpf_clean
+        
     payload = {
         "frequency": "ONE_TIME",
-        "methods": api_methods,
+        "methods": ["PIX", "CARD"] if payment_method in ["CREDIT_CARD", "CARD"] else ["PIX"],
         "products": [{"externalId": product_name, "name": f"VIP {product_name}", "quantity": 1, "price": final_amount, "description": f"VIP {product_name} para {nickname}"}],
         "returnUrl": os.getenv("RETURN_URL", "http://localhost:5500/success"),
         "completionUrl": os.getenv("COMPLETION_URL", "http://localhost:5500/success"),
-        "customer": {"name": nickname, "email": email, "taxId": "", "cellphone": sanitize_phone(data.get("cellphone"))}
+        "customer": customer_data
     }
     session = get_requests_session()
     headers = {"Authorization": f"Bearer {ABACATE_API_TOKEN}", "Content-Type": "application/json"}
@@ -820,7 +834,7 @@ def create_payment():
         response = session.post(ABACATE_API_URL, json=payload, headers=headers, timeout=API_TIMEOUT)
         result = response.json()
         if response.status_code != 200:
-            audit("public", "create_payment", "failed", {"status": response.status_code, "req_id": req_id})
+            audit("public", "create_payment", "failed", {"status": response.status_code, "req_id": req_id, "details": result})
             return jsonify({"error": "Payment Gateway Error", "details": result}), response.status_code
         bill_id = result.get("data", {}).get("id")
         url = result.get("data", {}).get("url")
