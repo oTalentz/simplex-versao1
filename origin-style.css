@@ -24,6 +24,16 @@
     color: #212121;
     /* Dark text for contrast */
     font-family: 'Rubik', sans-serif;
+    flex-wrap: wrap; /* Prevent overflow on small screens */
+}
+
+@media (max-width: 768px) {
+    .modal-highlight-box {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+        margin: 0 10px 15px 10px;
+    }
 }
 
 .kit-title-modal {
@@ -220,6 +230,20 @@
     /* Empurra para o final do container */
     width: 100%;
     box-sizing: border-box;
+    flex-wrap: wrap; /* Prevent overflow */
+    gap: 15px;
+}
+
+@media (max-width: 480px) {
+    .checkout-footer {
+        flex-direction: column;
+        text-align: center;
+        padding: 15px;
+    }
+    
+    .btn-buy-footer {
+        width: 100%;
+    }
 }
 
 .checkout-total-container {
@@ -291,7 +315,12 @@
 }
 
 /* Scroll na área de conteúdo se necessário, footer fixo */
-.comparison-section-container,
+.comparison-section-container {
+    overflow-x: auto;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+}
+
 .help-text-section,
 .modal-highlight-box {
     /* Não precisa mexer muito, o flex column do container já ajuda */

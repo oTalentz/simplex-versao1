@@ -550,15 +550,62 @@ body::after {
 
 
 /* Responsividade */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .content-overlay {
-        padding-top: 20%;
+        padding-top: 25%;
         padding-left: 10%;
         padding-right: 10%;
     }
+    .pantheon-title-simple {
+        font-size: 2.2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content-overlay {
+        padding-top: 20%;
+        padding-left: 8%;
+        padding-right: 8%;
+    }
 
     .rect-header {
-        width: 65%;
+        width: 75%;
+    }
+    
+    .pantheon-title-simple {
+        font-size: 1.8rem;
+    }
+    
+    .kit-title {
+        font-size: 0.9rem;
+    }
+    
+    .kit-price-subtle {
+        font-size: 0.8rem;
+        top: 10px;
+        right: 10px;
+    }
+    
+    .modal-container {
+        width: 95%;
+        margin: 10px;
+        padding-bottom: 120px;
+    }
+    
+    .modal-highlight-box {
+        margin: 0 10px;
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 320px) {
+    .pantheon-title-simple {
+        font-size: 1.5rem;
+    }
+    .click-indicator {
+        font-size: 0.45rem;
+        padding: 2px 4px;
     }
 }
 
@@ -1257,6 +1304,7 @@ body::after {
 /* Adjusting for 5 columns: Row Header, Lord, Knight, Guardian, Champion */
 .comparison-grid {
     grid-template-columns: 0.8fr 1fr 1fr 1fr 1fr;
+    min-width: 600px; /* Force horizontal scroll on mobile */
 }
 
 .comp-col {

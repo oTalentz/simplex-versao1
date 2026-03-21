@@ -36,6 +36,15 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
+@media (max-width: 480px) {
+    .terms-trigger-btn {
+        bottom: 15px;
+        right: 15px;
+        padding: 6px 10px;
+        font-size: 0.45rem;
+    }
+}
+
 /* Modal de Termos */
 .terms-modal {
     max-width: 800px; /* Mais largo que os outros modais */
