@@ -35,8 +35,10 @@ body {
     min-height: 100vh;
     padding: 20px;
     padding-top: 20px; /* Reduzido para subir o conteúdo */
+    padding-bottom: 60px; /* Add padding to prevent parchment from hitting the bottom border */
     position: relative;
-    overflow: hidden; /* Bloqueia scroll completamente */
+    overflow-x: hidden; /* Prevent horizontal scroll completely */
+    overflow-y: auto; /* Permitir scroll vertical caso o conteúdo exceda */
 }
 
 /* Borda Ornamental Medieval */
@@ -82,6 +84,8 @@ body::after {
     display: flex;
     justify-content: center;
     filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.5));
+    margin-bottom: 40px; /* Evita que encoste na borda inferior do body */
+    z-index: 10;
 }
 
 /* Animação de abertura do pergaminho */
@@ -101,6 +105,7 @@ body::after {
     position: relative;
     width: 100%;
     max-width: 500px;
+    margin-bottom: 20px; /* Space between scroll and bottom border */
     /* Animação do pergaminho se abrindo */
     animation: scroll-open 1.0s cubic-bezier(0.45, 0, 0.55, 1) forwards;
 }
@@ -1830,6 +1835,7 @@ body::after {
     pointer-events: none;
     white-space: nowrap;
     line-height: 1.4;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
 }
 
 /* Responsividade para mobile */
@@ -1846,7 +1852,8 @@ body::after {
 
     .mojang-disclaimer {
         font-size: 0.55rem;
-        bottom: 18px;
         left: 20px;
+        bottom: 20px;
+        max-width: 60%; /* Evita colidir com o botão de termos */
     }
 }
